@@ -84,6 +84,7 @@ function formatDate(value) {
   const day = String(date.getUTCDate()).padStart(2, "0");
   const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const month = months[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
 
   return `${day}-${month}-${year}`;
 }
