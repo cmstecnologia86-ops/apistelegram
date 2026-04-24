@@ -63,8 +63,10 @@ router.post("/clients-expiring", async (req, res) => {
 router.post("/activities-status", async (req, res) => {
   try {
     const result = await getActivitiesByStatus({
-      status: req.body?.status || req.body?.estado || req.body?.query || "en curso",
-      limit: req.body?.limit || 20
+      status: req.body?.status || req.body?.estado || "",
+      clientName: req.body?.client_name || req.body?.cliente || req.body?.client || "",
+      limit: req.body?.limit || (req.body?.client_name || req.body?.cliente || req.body?.client ? 10 : 5),
+      page: req.body?.page || req.body?.pagina || 1
     });
 
     return res.status(result.ok ? 200 : 400).json(result);

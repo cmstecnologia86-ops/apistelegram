@@ -46,7 +46,7 @@ function statusLabel(status) {
     cancelled: "cancelado"
   };
 
-  return labels[status] || status;
+  return labels[status] || status || "sin estado";
 }
 
 function firstValue(...values) {
@@ -98,41 +98,96 @@ function sortByDateAscNoDateLast(a, b) {
   return 0;
 }
 
-export async function getActivitiesByStatus({ status = "en curso", limit = 20 } = {}) {
-  const normalizedStatus = normalizeStatus(status);
+function normalizeText(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+export async function getActivitiesByStatus({
+  status = "",
+  clientName = "",
+  limit = 5,
+  page = 1
+} = {}) {
+  const cleanClient = String(clientName || "").trim();
+  const hasClient = cleanClient !== "";
+  const hasStatus = String(status || "").trim() !== "";
+  const normalizedStatus = hasStatus ? normalizeStatus(status) : "";
+
+  const defaultLimit = hasClient ? 10 : 5;
+  const safeLimit = Math.min(Math.max(Number(limit) || defaultLimit, 1), 10);
+  const safePage = Math.max(Number(page) || 1, 1);
 
   const params = new URLSearchParams();
-  params.set("status", normalizedStatus);
-  params.set("limit", String(Math.max(Number(limit) || 20, 100)));
+  params.set("limit", "100");
+  if (hasStatus) params.set("status", normalizedStatus);
 
   const response = await gestorIsoRequest(`/api/projects?${params.toString()}`);
-  const projects = response?.data?.projects || [];
+  let projects = response?.data?.projects || [];
+
+  if (hasClient) {
+    const needle = normalizeText(cleanClient);
+
+    projects = projects.filter((p) => {
+      const client = firstValue(p.client_name, p.clientName, p.client?.name, p.client, p.company_name) || "";
+      return normalizeText(client).includes(needle);
+    });
+  }
 
   if (!projects.length) {
+    const target = [
+      hasStatus ? `estado ${status}` : "",
+      hasClient ? `cliente ${cleanClient}` : ""
+    ].filter(Boolean).join(" · ");
+
     return {
       ok: false,
       intent: "activities_status",
       source: "gestor_iso",
-      text: `No encontré actividades en estado ${status}.`
+      text: `No encontré actividades para ${target || "la búsqueda solicitada"}.`
     };
   }
 
-  const sorted = [...projects]
-    .sort(sortByDateAscNoDateLast)
-    .slice(0, Number(limit) || 20);
+  const sorted = [...projects].sort(sortByDateAscNoDateLast);
+  const total = sorted.length;
+  const totalPages = Math.max(Math.ceil(total / safeLimit), 1);
+  const currentPage = Math.min(safePage, totalPages);
+  const start = (currentPage - 1) * safeLimit;
+  const end = start + safeLimit;
+  const pageItems = sorted.slice(start, end);
 
-  const lines = sorted.map((p) => {
+  const lines = pageItems.map((p) => {
     const client = firstValue(p.client_name, p.clientName, p.client?.name, p.client, p.company_name) || "Sin cliente";
     const title = firstValue(p.name, p.title, p.activity_name, p.activityName) || "Sin actividad";
+    const state = statusLabel(p.status || normalizedStatus);
     const date = formatDate(getProjectDate(p));
 
-    return `- ${client} — ${title} — ${date}`;
+    return `- ${client} — ${title} — ${state} — ${date}`;
   });
+
+  const titleParts = ["Actividades"];
+  if (hasStatus) titleParts.push(statusLabel(normalizedStatus));
+  if (hasClient) titleParts.push(cleanClient);
+
+  const nextHint = currentPage < totalPages
+    ? `\n\nPara ver más: /actividad ${hasClient ? cleanClient : status} ${currentPage + 1}`
+    : "";
 
   return {
     ok: true,
     intent: "activities_status",
     source: "gestor_iso",
-    text: `Actividades ${statusLabel(normalizedStatus)}\n\n${lines.join("\n")}`
+    text: `${titleParts.join(" · ")}\nPágina ${currentPage}/${totalPages} · ${start + 1}-${Math.min(end, total)} de ${total}\n\n${lines.join("\n")}${nextHint}`,
+    meta: {
+      status: hasStatus ? statusLabel(normalizedStatus) : null,
+      client_name: hasClient ? cleanClient : null,
+      page: currentPage,
+      limit: safeLimit,
+      total,
+      totalPages
+    }
   };
 }
