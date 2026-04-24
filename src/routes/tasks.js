@@ -2,6 +2,7 @@
 import { gestorIsoRequest } from "../services/gestorIsoClient.js";
 import { getClientCodes } from "../services/gestorClients.js";
 import { getClientsExpiringFromGestor } from "../services/gestorExpirations.js";
+import { getActivitiesByStatus } from "../services/gestorActivities.js";
 
 const router = express.Router();
 
@@ -54,6 +55,24 @@ router.post("/clients-expiring", async (req, res) => {
       ok: false,
       intent: "clients_expiring",
       text: "No pude obtener clientes vencidos o por vencer.",
+      error: error.message
+    });
+  }
+});
+
+router.post("/activities-status", async (req, res) => {
+  try {
+    const result = await getActivitiesByStatus({
+      status: req.body?.status || req.body?.estado || req.body?.query || "en curso",
+      limit: req.body?.limit || 20
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "activities_status",
+      text: "No pude obtener actividades.",
       error: error.message
     });
   }
