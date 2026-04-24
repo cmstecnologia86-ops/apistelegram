@@ -32,7 +32,8 @@ async function checkDb(name, prefix) {
   }
 }
 
-async function checkGestorIso() {
+async function checkGestorIso(),
+    checkGestorIsoLogin() {
   try {
     const baseUrl = process.env.GESTOR_ISO_BASE_URL;
     if (!baseUrl) return { name: "GESTOR_ISO", ok: false, status: "ERROR", error: "Falta GESTOR_ISO_BASE_URL" };
@@ -49,7 +50,8 @@ router.get("/", async (_req, res) => {
     checkDb("CQS", "CQS"),
     checkDb("SISCAP", "SISCAP"),
     checkDb("MYSQL", ""),
-    checkGestorIso()
+    checkGestorIso(),
+    checkGestorIsoLogin()
   ]);
 
   return res.json({
@@ -63,3 +65,4 @@ router.get("/", async (_req, res) => {
 });
 
 export default router;
+
