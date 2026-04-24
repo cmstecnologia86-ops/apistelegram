@@ -77,8 +77,8 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
   const lines = clients.map((c) => {
     const code = c.codigo || "sin código";
     const standard = c.standard || "sin norma";
-    const scope = c.scope ? ` — ${c.scope}` : "";
-    return `- ${code} — ${standard}${scope}`;
+
+    return `- ${code} — ${standard}`;
   });
 
   const firstName = clients[0]?.name || query;
@@ -87,7 +87,7 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
     ok: true,
     intent: "client_codes",
     source: "gestor_iso",
-    text: `${firstName}\nCódigo(s):\n${lines.join("\n")}`,
+    text: `${firstName}\n${lines.join("\n")}`,
     data: {
       query,
       count: clients.length,
