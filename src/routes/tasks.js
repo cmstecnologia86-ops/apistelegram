@@ -110,7 +110,28 @@ router.post("/activities-priority", async (req, res) => {
     });
   }
 });
+
+import { gestorIsoRequest } from "../services/gestorIsoClient.js";
+
+router.post("/gestor-test", async (req, res) => {
+  try {
+    const data = await gestorIsoRequest("/api/clients?limit=1");
+
+    return res.json({
+      ok: true,
+      test: "conexion ok",
+      sample: data
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
 export default router;
+
 
 
 
