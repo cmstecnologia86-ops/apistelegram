@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import { getSummary } from "../services/summaryService.js";
 import { getClients, getClientsExpiring, getClientExpiryByName } from "../services/clientsService.js";
 import { getProjects, searchProject } from "../services/projectsService.js";
@@ -56,4 +56,23 @@ router.post("/gantt", async (req, res) => {
   try { return res.json(await getGantt({ mode: req.body?.mode, limit: req.body?.limit })); } catch (error) { return res.status(500).json({ ok: false, intent: "gantt", text: "No pude revisar gantt.", error: error.message }); }
 });
 
+
+router.post("/gestor-clients", async (req, res) => {
+  try {
+    return res.json(await getGestorClients({
+      limit: req.body?.limit,
+      onlyAlerts: req.body?.only_alerts === true,
+      search: req.body?.search || ""
+    }));
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "gestor_clients",
+      source: "gestor_iso",
+      text: "No pude obtener clientes desde Gestor ISO.",
+      error: error.message
+    });
+  }
+});
 export default router;
+
