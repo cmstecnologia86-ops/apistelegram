@@ -5,7 +5,7 @@ import { getProjects, searchProject } from "../services/projectsService.js";
 import { getMeetings } from "../services/meetingsService.js";
 import { getActivities } from "../services/activitiesService.js";
 import { getGantt } from "../services/ganttService.js";
-import { getGestorClients, getClientCodes, getActivitiesByPriority } from "../services/gestorIsoService.js";
+import { getGestorClients, getClientCodes, getActivitiesByStatus } from "../services/gestorIsoService.js";
 
 const router = express.Router();
 
@@ -96,8 +96,8 @@ router.post("/client-codes", async (req, res) => {
 
 router.post("/activities-priority", async (req, res) => {
   try {
-    const result = await getActivitiesByPriority({
-      priority: req.body?.priority || "high",
+    const result = await getActivitiesByStatus({
+      status: req.body?.priority || "en curso",
       limit: req.body?.limit || 20
     });
     return res.status(result.ok ? 200 : 400).json(result);
@@ -111,6 +111,7 @@ router.post("/activities-priority", async (req, res) => {
   }
 });
 export default router;
+
 
 
 
