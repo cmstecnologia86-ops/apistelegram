@@ -32,8 +32,7 @@ async function checkDb(name, prefix) {
   }
 }
 
-async function checkGestorIso(),
-    checkGestorIsoLogin() {
+async function checkGestorIso() {
   try {
     const baseUrl = process.env.GESTOR_ISO_BASE_URL;
     if (!baseUrl) return { name: "GESTOR_ISO", ok: false, status: "ERROR", error: "Falta GESTOR_ISO_BASE_URL" };
@@ -42,6 +41,39 @@ async function checkGestorIso(),
     return { name: "GESTOR_ISO", ok: res.ok, status: res.ok ? "OK" : "ERROR", httpStatus: res.status };
   } catch (error) {
     return { name: "GESTOR_ISO", ok: false, status: "ERROR", error: error.message };
+  }
+}
+
+async function checkGestorIsoLogin() {
+  try {
+    const baseUrl = String(process.env.GESTOR_ISO_BASE_URL || "").replace(/\/+$/, "");
+    const user = process.env.GESTOR_ISO_USER;
+    const password = process.env.GESTOR_ISO_PASSWORD;
+
+    if (!baseUrl) return { name: "GESTOR_ISO_LOGIN", ok: false, status: "ERROR", error: "Falta GESTOR_ISO_BASE_URL" };
+    if (!user || !password) return { name: "GESTOR_ISO_LOGIN", ok: false, status: "ERROR", error: "Falta GESTOR_ISO_USER o GESTOR_ISO_PASSWORD" };
+
+    const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: user, password })
+    });
+
+    const loginText = await loginRes.text();
+    const cookie = loginRes.headers.get("set-cookie");
+
+    if (!loginRes.ok) {
+      return { name: "GESTOR_ISO_LOGIN", ok: false, status: "ERROR", httpStatus: loginRes.status, error: loginText.slice(0, 300) };
+    }
+
+    const meRes = await fetch(`${baseUrl}/api/auth/me`, {
+      method: "GET",
+      headers: cookie ? { cookie } : {}
+    });
+
+    return { name: "GESTOR_ISO_LOGIN", ok: meRes.ok, status: meRes.ok ? "OK" : "ERROR", loginStatus: loginRes.status, meStatus: meRes.status };
+  } catch (error) {
+    return { name: "GESTOR_ISO_LOGIN", ok: false, status: "ERROR", error: error.message };
   }
 }
 
@@ -65,4 +97,3 @@ router.get("/", async (_req, res) => {
 });
 
 export default router;
-
