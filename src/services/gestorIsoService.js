@@ -106,18 +106,13 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
 }
 
 export async function getActivitiesByPriority({ priority = "high", limit = 20 } = {}) {
-  const map = {
-    baja: "low",
-    media: "medium",
-    alta: "high",
-    urgente: "urgent"
-  };
+  const map = { baja: "borrador", media: "en_revision", alta: "en_curso", urgente: "en_curso" };
 
-  const p = map[String(priority).toLowerCase()] || priority;
+  const p = map[String(priority).toLowerCase()] || String(priority).toLowerCase();
 
   const data = await gestorIsoFetch(`/api/workspace/summary`);
 
-  const items = (data?.activities || []).filter(a => (a.priority || "").toLowerCase() === p).slice(0, limit);
+  const items = (data?.activities || []).filter(a => (a.status || "").toLowerCase().includes(p)).slice(0, limit);
 
   if (!items.length) {
     return {
@@ -141,4 +136,5 @@ export async function getActivitiesByPriority({ priority = "high", limit = 20 } 
     text: `🔴 Actividades ${label}\n\n${lines.join("\n")}`
   };
 }
+
 
