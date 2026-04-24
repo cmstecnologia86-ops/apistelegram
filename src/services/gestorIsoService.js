@@ -49,3 +49,58 @@ export async function getGestorClients({ limit = DEFAULT_LIMIT, onlyAlerts = fal
     data
   };
 }
+
+export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
+  const query = String(clientName || "").trim();
+  if (!query) {
+    return {
+      ok: false,
+      intent: "client_codes",
+      source: "gestor_iso",
+      text: "Debes indicar el nombre del cliente."
+    };
+  }
+
+  const result = await getGestorClients({ limit, search: query });
+  const clients = result?.data?.data?.clients || [];
+
+  if (!clients.length) {
+    return {
+      ok: false,
+      intent: "client_codes",
+      source: "gestor_iso",
+      text: `No encontré certificaciones para: ${query}`,
+      data: { query, clients: [] }
+    };
+  }
+
+  const lines = clients.map((c) => {
+    const code = c.codigo || "sin código";
+    const standard = c.standard || "sin norma";
+    const scope = c.scope ? ` — ${c.scope}` : "";
+    return `- ${code} — ${standard}${scope}`;
+  });
+
+  const firstName = clients[0]?.name || query;
+
+  return {
+    ok: true,
+    intent: "client_codes",
+    source: "gestor_iso",
+    text: `${firstName}\nCódigo(s):\n${lines.join("\n")}`,
+    data: {
+      query,
+      count: clients.length,
+      clients: clients.map((c) => ({
+        id: c.id,
+        name: c.name,
+        codigo: c.codigo,
+        standard: c.standard,
+        scope: c.scope,
+        status: c.status,
+        fe_final: c.fe_final,
+        days_remaining: c.days_remaining
+      }))
+    }
+  };
+}

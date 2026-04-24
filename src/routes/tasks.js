@@ -5,7 +5,7 @@ import { getProjects, searchProject } from "../services/projectsService.js";
 import { getMeetings } from "../services/meetingsService.js";
 import { getActivities } from "../services/activitiesService.js";
 import { getGantt } from "../services/ganttService.js";
-import { getGestorClients } from "../services/gestorIsoService.js";
+import { getGestorClients, getClientCodes } from "../services/gestorIsoService.js";
 
 const router = express.Router();
 
@@ -75,6 +75,25 @@ router.post("/gestor-clients", async (req, res) => {
     });
   }
 });
+
+router.post("/client-codes", async (req, res) => {
+  try {
+    const result = await getClientCodes({
+      clientName: req.body?.client_name || req.body?.cliente || req.body?.query || "",
+      limit: req.body?.limit || 20
+    });
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "client_codes",
+      source: "gestor_iso",
+      text: "No pude obtener los códigos del cliente.",
+      error: error.message
+    });
+  }
+});
 export default router;
+
 
 
