@@ -5,6 +5,7 @@ import { getProjects, searchProject } from "../services/projectsService.js";
 import { getMeetings } from "../services/meetingsService.js";
 import { getActivities } from "../services/activitiesService.js";
 import { getGantt } from "../services/ganttService.js";
+import { getGestorClients } from "../services/gestorIsoService.js";
 
 const router = express.Router();
 
@@ -75,4 +76,5 @@ router.post("/gestor-clients", async (req, res) => {
   }
 });
 export default router;
+
 
