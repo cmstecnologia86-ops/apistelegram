@@ -106,13 +106,13 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
 }
 
 export async function getActivitiesByPriority({ priority = "high", limit = 20 } = {}) {
-  const map = { baja: "borrador", media: "en_revision", alta: "en_curso", urgente: "en_curso" };
+  
 
-  const p = map[String(priority).toLowerCase()] || String(priority).toLowerCase();
+  const p = String(priority || "").toLowerCase();
 
   const data = await gestorIsoFetch(`/api/workspace/summary`);
 
-  const items = (data?.activities || []).filter(a => ((a.status || "").toLowerCase().replace(" ","")).includes(p.replace("_",""))).slice(0, limit);
+  const items = (data?.workspace?.activities || data?.data?.activities || []).filter(a => (a.status || "").toLowerCase().includes(p)).slice(0, limit);
 
   if (!items.length) {
     return {
@@ -133,9 +133,10 @@ export async function getActivitiesByPriority({ priority = "high", limit = 20 } 
   return {
     ok: true,
     intent: "activities_priority",
-    text: `🔴 Actividades ${label}\n\n${lines.join("\n")}`
+    text: `🔴 Actividades ${lines.join("\n")}`
   };
 }
+
 
 
 
