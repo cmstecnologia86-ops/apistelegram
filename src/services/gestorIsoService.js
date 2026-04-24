@@ -110,9 +110,9 @@ export async function getActivitiesByPriority({ priority = "high", limit = 20 } 
 
   const p = String(priority || "").toLowerCase();
 
-  const data = await gestorIsoFetch(`/api/workspace/summary`);
+  const data = await gestorIsoFetch(`/api/projects`);
 
-  const items = (data?.workspace?.activities || data?.data?.activities || []).filter(a => (a.status || "").toLowerCase().includes(p)).slice(0, limit);
+  const items = (data?.projects || data || []).filter(a => (a.status || "").toLowerCase().includes(p)).slice(0, limit);
 
   if (!items.length) {
     return {
@@ -136,6 +136,7 @@ export async function getActivitiesByPriority({ priority = "high", limit = 20 } 
     text: `🔴 Actividades ${lines.join("\n")}`
   };
 }
+
 
 
 
