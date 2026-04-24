@@ -73,3 +73,4 @@ export async function getActivitiesByStatus({ status = "", limit = DEFAULT_LIMIT
     text: `Actividades ${status}\n\n${lines.join("\n")}`
   };
 }
+
