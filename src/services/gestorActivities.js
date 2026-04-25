@@ -286,7 +286,7 @@ export async function getActivitiesByStatus({
         ok: true,
         intent: "activities_status",
         source: "gestor_iso",
-        text: `No encontré actividades para “${cleanClient}”.\n\nPosible coincidencia:\n¿Te refieres a “${suggested}”?\n\nPrueba:\n/actividad ${suggested}${statusPart}`
+        text: `No encontré actividades para “${cleanClient}”.\n\nPosible coincidencia:\n1. ${suggested}\n\nResponde 1 para ejecutar esa opción.\nO escribe “no” para cancelar.\n\nPrueba:\n/actividad ${suggested}${statusPart}`
       };
     }
 
@@ -298,7 +298,7 @@ export async function getActivitiesByStatus({
         ok: true,
         intent: "activities_status",
         source: "gestor_iso",
-        text: `No encontré actividades para “${cleanClient}” exacto.\n\nPosibles coincidencias:\n${lines.join("\n")}\n\nPrueba:\n/actividad ${suggestions[0].name}${statusPart}`
+        text: `No encontré actividades para “${cleanClient}” exacto.\n\nPosibles coincidencias:\n${lines.join("\n")}\n\nResponde con el número de la opción para ejecutarla.\nO escribe “no” para cancelar.\n\nPrueba:\n/actividad ${suggestions[0].name}${statusPart}`
       };
     }
   }
@@ -357,3 +357,4 @@ export async function getActivitiesByStatus({
     }
   };
 }
+
