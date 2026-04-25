@@ -131,6 +131,13 @@ function getProjectStatusLabel(project) {
     "in progress": "En curso",
     en_curso: "En curso",
     "en curso": "En curso",
+    in_review: "En revisión",
+    "in review": "En revisión",
+    en_revision: "En revisión",
+    "en revision": "En revisión",
+    "en revisión": "En revisión",
+    review: "En revisión",
+    revision: "En revisión",
     completed: "Completado",
     completado: "Completado",
     finalizado: "Completado",
@@ -499,3 +506,5 @@ export async function getProjects({
     })
   };
 }
+
+
