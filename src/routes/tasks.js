@@ -4,6 +4,7 @@ import { getClientCodes } from "../services/gestorClients.js";
 import { getClientsExpiringFromGestor } from "../services/gestorExpirations.js";
 import { getActivitiesByStatus } from "../services/gestorActivities.js";
 import { getMeetings } from "../services/gestorMeetings.js";
+import { getProjects } from "../services/gestorProjects.js";
 
 const router = express.Router();
 
@@ -97,6 +98,27 @@ router.post("/meetings", async (req, res) => {
       ok: false,
       intent: "meetings",
       text: "No pude obtener reuniones.",
+      error: error.message
+    });
+  }
+});
+
+router.post("/projects", async (req, res) => {
+  try {
+    const result = await getProjects({
+      query: req.body?.query || req.body?.client_name || req.body?.cliente || req.body?.search || "",
+      limit: req.body?.limit || 5,
+      page: req.body?.page || req.body?.pagina || 1,
+      detail: req.body?.detail || false,
+      includeCompleted: req.body?.include_completed || req.body?.includeCompleted || false
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "projects",
+      text: "No pude obtener proyectos.",
       error: error.message
     });
   }
