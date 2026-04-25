@@ -169,7 +169,7 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
       ok: true,
       intent: "client_codes",
       source: "gestor_iso",
-      text: `No encontré “${query}”.\n\nPosible coincidencia:\n¿Te refieres a “${suggestions[0].name}”?\n\nPrueba:\n/codigo ${suggestions[0].name}`
+      text: `No encontré “${query}”.\n\nPosible coincidencia:\n1. ${suggestions[0].name}\n\nResponde 1 para ejecutar esa opción.\nO escribe “no” para cancelar.\n\nPrueba:\n/codigo ${suggestions[0].name}`
     };
   }
 
@@ -180,7 +180,7 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
       ok: true,
       intent: "client_codes",
       source: "gestor_iso",
-      text: `No encontré “${query}” exacto.\n\nPosibles coincidencias:\n${lines.join("\n")}\n\nPrueba:\n/codigo ${suggestions[0].name}`
+      text: `No encontré “${query}” exacto.\n\nPosibles coincidencias:\n${lines.join("\n")}\n\nResponde con el número de la opción para ejecutarla.\nO escribe “no” para cancelar.\n\nPrueba:\n/codigo ${suggestions[0].name}`
     };
   }
 
@@ -191,3 +191,4 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
     text: `No encontré certificaciones para: ${query}`
   };
 }
+
