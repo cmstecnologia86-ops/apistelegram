@@ -5,13 +5,22 @@ function normalizeText(value = "") {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
+function compactText(value = "") {
+  return normalizeText(value).replace(/\s+/g, "");
+}
+
+function looseText(value = "") {
+  return compactText(value).replace(/v/g, "b");
+}
+
 function levenshtein(a = "", b = "") {
-  const x = normalizeText(a);
-  const y = normalizeText(b);
+  const x = looseText(a);
+  const y = looseText(b);
 
   if (!x && !y) return 0;
   if (!x) return y.length;
@@ -40,17 +49,31 @@ function levenshtein(a = "", b = "") {
 }
 
 function similarity(a = "", b = "") {
-  const x = normalizeText(a);
-  const y = normalizeText(b);
+  const x = looseText(a);
+  const y = looseText(b);
 
   if (!x || !y) return 0;
   if (x === y) return 1;
-  if (x.includes(y) || y.includes(x)) return 0.92;
+  if (x.includes(y) || y.includes(x)) return 0.94;
 
   const distance = levenshtein(x, y);
   const maxLength = Math.max(x.length, y.length);
 
   return maxLength === 0 ? 0 : 1 - distance / maxLength;
+}
+
+function candidateNames(client) {
+  const name = normalizeText(client?.name || "");
+  const parts = name.split(" ").filter(Boolean);
+  const candidates = new Set();
+
+  if (name) candidates.add(name);
+  if (parts.length) candidates.add(parts[0]);
+  if (parts.length >= 2) candidates.add(`${parts[0]} ${parts[1]}`);
+  if (client?.rut) candidates.add(String(client.rut));
+  if (client?.codigo) candidates.add(String(client.codigo));
+
+  return [...candidates];
 }
 
 function uniqueClients(clients = []) {
@@ -76,22 +99,21 @@ function formatClientCodes(companyName, clients) {
 
 function findSimilarClients(query, clients = []) {
   const scored = clients
-    .map((client) => ({
-      client,
-      score: Math.max(
-        similarity(query, client.name),
-        similarity(query, client.rut),
-        similarity(query, client.codigo)
-      )
-    }))
-    .filter((item) => item.score >= 0.55)
+    .map((client) => {
+      const score = Math.max(
+        ...candidateNames(client).map((candidate) => similarity(query, candidate))
+      );
+
+      return { client, score };
+    })
+    .filter((item) => item.score >= 0.50)
     .sort((a, b) => b.score - a.score);
 
   const byName = new Map();
 
   for (const item of scored) {
     const name = item.client.name || "";
-    const key = normalizeText(name);
+    const key = compactText(name);
 
     if (!key) continue;
 
@@ -136,7 +158,7 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
   }
 
   const allParams = new URLSearchParams();
-  allParams.set("limit", "300");
+  allParams.set("limit", "500");
 
   const allResponse = await gestorIsoRequest(`/api/clients?${allParams.toString()}`);
   const allClients = uniqueClients(allResponse?.data?.clients || []);
@@ -144,7 +166,7 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
 
   if (suggestions.length === 1) {
     return {
-      ok: false,
+      ok: true,
       intent: "client_codes",
       source: "gestor_iso",
       text: `No encontré “${query}”.\n\nPosible coincidencia:\n¿Te refieres a “${suggestions[0].name}”?\n\nPrueba:\n/codigo ${suggestions[0].name}`
@@ -155,7 +177,7 @@ export async function getClientCodes({ clientName = "", limit = 20 } = {}) {
     const lines = suggestions.map((item, index) => `${index + 1}. ${item.name}`);
 
     return {
-      ok: false,
+      ok: true,
       intent: "client_codes",
       source: "gestor_iso",
       text: `No encontré “${query}” exacto.\n\nPosibles coincidencias:\n${lines.join("\n")}\n\nPrueba:\n/codigo ${suggestions[0].name}`
