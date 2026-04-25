@@ -18,6 +18,10 @@ function looseText(value = "") {
   return compactText(value).replace(/v/g, "b");
 }
 
+function firstValue(...values) {
+  return values.find((value) => value !== undefined && value !== null && String(value).trim() !== "");
+}
+
 function levenshtein(a = "", b = "") {
   const x = looseText(a);
   const y = looseText(b);
@@ -62,10 +66,6 @@ function similarity(a = "", b = "") {
   return maxLength === 0 ? 0 : 1 - distance / maxLength;
 }
 
-function firstValue(...values) {
-  return values.find((value) => value !== undefined && value !== null && String(value).trim() !== "");
-}
-
 function getMeetingTitle(meeting) {
   return firstValue(
     meeting.title,
@@ -89,18 +89,110 @@ function getMeetingClient(meeting) {
   ) || "Sin cliente";
 }
 
-function getMeetingDescription(meeting) {
+function getMeetingType(meeting) {
   return firstValue(
-    meeting.description,
-    meeting.summary,
-    meeting.objective,
-    meeting.notes,
-    meeting.detail,
-    meeting.details,
+    meeting.type,
+    meeting.tipo,
+    meeting.meeting_type,
+    meeting.meetingType,
+    meeting.category
+  ) || "Sin tipo";
+}
+
+function getMeetingStatusRaw(meeting) {
+  return String(firstValue(
+    meeting.status,
+    meeting.state,
+    meeting.estado,
+    meeting.meeting_status,
+    meeting.meetingStatus
+  ) || "scheduled").toLowerCase();
+}
+
+function getMeetingStatusLabel(meeting) {
+  const raw = normalizeText(getMeetingStatusRaw(meeting));
+
+  const map = {
+    scheduled: "Programada",
+    programada: "Programada",
+    planned: "Programada",
+    pendiente: "Pendiente",
+    pending: "Pendiente",
+    completed: "Completada",
+    completada: "Completada",
+    realizada: "Completada",
+    done: "Completada",
+    cancelled: "Cancelada",
+    canceled: "Cancelada",
+    cancelada: "Cancelada",
+    rescheduled: "Reprogramada",
+    reprogramada: "Reprogramada",
+    draft: "Borrador",
+    borrador: "Borrador"
+  };
+
+  return map[raw] || firstValue(meeting.estado, meeting.status, "Programada");
+}
+
+function getMeetingAgenda(meeting) {
+  return firstValue(
     meeting.agenda,
+    meeting.objective,
+    meeting.description,
+    meeting.detail,
+    meeting.details
+  ) || "Sin agenda registrada.";
+}
+
+function getMeetingSummary(meeting) {
+  return firstValue(
+    meeting.summary,
+    meeting.resumen,
+    meeting.conclusions,
+    meeting.agreements
+  ) || "";
+}
+
+function getMeetingNotes(meeting) {
+  return firstValue(
+    meeting.notes,
+    meeting.notas,
     meeting.observation,
-    meeting.observations
-  ) || "Sin descripción registrada.";
+    meeting.observations,
+    meeting.comments
+  ) || "";
+}
+
+function getMeetingLocation(meeting) {
+  return firstValue(
+    meeting.location,
+    meeting.modalidad,
+    meeting.mode,
+    meeting.place,
+    meeting.address,
+    meeting.ubicacion,
+    meeting.ubicacion_modalidad,
+    meeting.meeting_location
+  ) || "No informada";
+}
+
+function getMeetingUrl(meeting) {
+  return firstValue(
+    meeting.url,
+    meeting.meeting_url,
+    meeting.meetingUrl,
+    meeting.remote_url,
+    meeting.remoteUrl,
+    meeting.link,
+    meeting.zoom_url,
+    meeting.zoomUrl,
+    meeting.meet_url,
+    meeting.meetUrl,
+    meeting.teams_url,
+    meeting.teamsUrl,
+    meeting.url_reunion,
+    meeting.enlace_remoto
+  ) || "";
 }
 
 function getMeetingDate(meeting) {
@@ -119,19 +211,26 @@ function getMeetingDate(meeting) {
   );
 }
 
-function getMeetingStatus(meeting) {
-  return String(firstValue(
-    meeting.status,
-    meeting.state,
-    meeting.estado,
-    meeting.meeting_status
-  ) || "activa").toLowerCase();
-}
-
 function parseDateValue(value) {
   if (!value) return null;
-  const time = Date.parse(String(value));
+
+  const raw = String(value).trim();
+
+  const chileMatch = raw.match(/^(\d{2})-(\d{2})-(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+  if (chileMatch) {
+    const [, dd, mm, yyyy, hh = "00", min = "00"] = chileMatch;
+    const iso = `${yyyy}-${mm}-${dd}T${hh}:${min}:00`;
+    const time = Date.parse(iso);
+    return Number.isNaN(time) ? null : time;
+  }
+
+  const time = Date.parse(raw);
   return Number.isNaN(time) ? null : time;
+}
+
+function hasExplicitTime(value) {
+  if (!value) return false;
+  return /\d{1,2}:\d{2}/.test(String(value));
 }
 
 function formatDate(value) {
@@ -143,6 +242,12 @@ function formatDate(value) {
   const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const month = months[date.getUTCMonth()];
   const year = date.getUTCFullYear();
+
+  if (hasExplicitTime(value)) {
+    const hour = String(date.getUTCHours()).padStart(2, "0");
+    const minute = String(date.getUTCMinutes()).padStart(2, "0");
+    return `${day}-${month}-${year} ${hour}:${minute}`;
+  }
 
   return `${day}-${month}-${year}`;
 }
@@ -213,7 +318,7 @@ async function fetchMeetingsFromGestor() {
 }
 
 function isActiveMeeting(meeting) {
-  const status = normalizeText(getMeetingStatus(meeting));
+  const status = normalizeText(getMeetingStatusRaw(meeting));
   const inactive = ["completado", "completada", "completed", "cancelado", "cancelada", "cancelled", "cerrado", "cerrada"];
 
   return !inactive.some((word) => status.includes(word));
@@ -226,8 +331,9 @@ function matchesQuery(meeting, query) {
   const values = [
     getMeetingTitle(meeting),
     getMeetingClient(meeting),
-    getMeetingDescription(meeting),
-    getMeetingStatus(meeting)
+    getMeetingAgenda(meeting),
+    getMeetingStatusLabel(meeting),
+    getMeetingType(meeting)
   ];
 
   return values.some((value) => {
@@ -242,7 +348,7 @@ function scoreMeeting(query, meeting) {
   const values = [
     getMeetingClient(meeting),
     getMeetingTitle(meeting),
-    getMeetingDescription(meeting)
+    getMeetingAgenda(meeting)
   ];
 
   return Math.max(...values.map((value) => similarity(query, value)));
@@ -278,10 +384,38 @@ function formatMeetingDetail(meeting) {
   const title = getMeetingTitle(meeting);
   const client = getMeetingClient(meeting);
   const date = formatDate(getMeetingDate(meeting));
-  const status = getMeetingStatus(meeting);
-  const description = getMeetingDescription(meeting);
+  const status = getMeetingStatusLabel(meeting);
+  const type = getMeetingType(meeting);
+  const location = getMeetingLocation(meeting);
+  const url = getMeetingUrl(meeting);
+  const agenda = getMeetingAgenda(meeting);
+  const summary = getMeetingSummary(meeting);
+  const notes = getMeetingNotes(meeting);
 
-  return `Reunión\n\nCliente: ${client}\nNombre: ${title}\nFecha: ${date}\nEstado: ${status}\n\nDetalle:\n${description}`;
+  const lines = [
+    "Reunión",
+    "",
+    `Cliente: ${client}`,
+    `Nombre: ${title}`,
+    `Fecha: ${date}`,
+    `Estado: ${status}`,
+    `Tipo: ${type}`,
+    `Ubicación / modalidad: ${location}`,
+    `Enlace remoto: ${url || "No informado"}`,
+    "",
+    "Agenda:",
+    agenda
+  ];
+
+  if (summary) {
+    lines.push("", "Resumen:", summary);
+  }
+
+  if (notes) {
+    lines.push("", "Notas:", notes);
+  }
+
+  return lines.join("\n");
 }
 
 export async function getMeetings({
