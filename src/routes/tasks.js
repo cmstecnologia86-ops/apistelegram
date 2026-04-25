@@ -80,4 +80,25 @@ router.post("/activities-status", async (req, res) => {
   }
 });
 
+
+router.post("/meetings", async (req, res) => {
+  try {
+    const result = await getMeetings({
+      query: req.body?.query || req.body?.client_name || req.body?.cliente || req.body?.search || "",
+      limit: req.body?.limit || 5,
+      page: req.body?.page || req.body?.pagina || 1,
+      detail: req.body?.detail || false
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "meetings",
+      text: "No pude obtener reuniones.",
+      error: error.message
+    });
+  }
+});
 export default router;
+
