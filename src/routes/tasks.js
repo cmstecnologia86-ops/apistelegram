@@ -3,6 +3,7 @@ import { gestorIsoRequest } from "../services/gestorIsoClient.js";
 import { getClientCodes } from "../services/gestorClients.js";
 import { getClientsExpiringFromGestor } from "../services/gestorExpirations.js";
 import { getActivitiesByStatus } from "../services/gestorActivities.js";
+import { getMeetings } from "../services/gestorMeetings.js";
 
 const router = express.Router();
 
@@ -101,4 +102,5 @@ router.post("/meetings", async (req, res) => {
   }
 });
 export default router;
+
 
