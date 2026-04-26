@@ -502,7 +502,7 @@ export async function getProjects({
     };
   }
 
-  if (detail || filtered.length === 1) {
+  if (detail) {
     return {
       ok: true,
       intent: "projects",
@@ -523,6 +523,7 @@ export async function getProjects({
     })
   };
 }
+
 
 
 
