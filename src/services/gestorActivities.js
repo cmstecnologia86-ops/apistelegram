@@ -339,7 +339,7 @@ export async function getActivitiesByStatus({
   if (hasClient) titleParts.push(cleanClient);
 
   const nextHint = currentPage < totalPages
-    ? `\n\nPara ver más: /actividad ${hasClient ? cleanClient : status} ${currentPage + 1}`
+    ? `\n\nOpciones:\n1. Siguiente página: /actividad ${hasClient ? cleanClient : status} ${currentPage + 1}`
     : "";
 
   return {
@@ -357,4 +357,5 @@ export async function getActivitiesByStatus({
     }
   };
 }
+
 
