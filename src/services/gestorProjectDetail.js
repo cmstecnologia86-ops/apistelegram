@@ -304,12 +304,7 @@ function extractProjects(response) {
 }
 
 async function fetchProjects() {
-  const endpoints = [
-    "/api/gantt/projects?limit=300",
-    "/api/workspace/gantt/projects?limit=300",
-    "/api/projects/gantt?limit=300",
-    "/api/workspace/summary"
-  ];
+  const endpoints = ["/api/gantt-projects"];
 
   const errors = [];
 
@@ -330,12 +325,7 @@ async function fetchProjects() {
 }
 
 async function fetchProjectById(id) {
-  const endpoints = [
-    `/api/gantt/projects/${encodeURIComponent(id)}`,
-    `/api/workspace/gantt/projects/${encodeURIComponent(id)}`,
-    `/api/projects/gantt/${encodeURIComponent(id)}`,
-    `/api/projects/${encodeURIComponent(id)}`
-  ];
+  const endpoints = [`/api/gantt-projects/${encodeURIComponent(id)}`];
 
   for (const endpoint of endpoints) {
     try {
@@ -560,3 +550,4 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
