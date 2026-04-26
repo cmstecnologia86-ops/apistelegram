@@ -441,7 +441,7 @@ export async function getProjects({
   limit = 5,
   page = 1,
   detail = false,
-  includeCompleted = false
+  includeCompleted = true
 } = {}) {
   const cleanQuery = String(query || "").trim();
   const result = await fetchProjectsFromGestor();
@@ -523,6 +523,8 @@ export async function getProjects({
     })
   };
 }
+
+
 
 
 

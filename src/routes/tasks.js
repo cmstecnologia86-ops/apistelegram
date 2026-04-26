@@ -110,7 +110,7 @@ router.post("/projects", async (req, res) => {
       limit: req.body?.limit || 5,
       page: req.body?.page || req.body?.pagina || 1,
       detail: req.body?.detail || false,
-      includeCompleted: req.body?.include_completed || req.body?.includeCompleted || false
+      includeCompleted: req.body?.include_completed ?? req.body?.includeCompleted ?? true
     });
 
     return res.status(result.ok ? 200 : 400).json(result);
@@ -124,5 +124,7 @@ router.post("/projects", async (req, res) => {
   }
 });
 export default router;
+
+
 
 
