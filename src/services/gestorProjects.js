@@ -358,6 +358,27 @@ function scoreProject(query, project) {
   return Math.max(...values.map((value) => similarity(query, value)));
 }
 
+function shortProjectTitle(value = "") {
+  const text = String(value || "").trim();
+
+  const replacements = [
+    {
+      match: /Certificación Sistema de Gestión de Calidad, Medioambiente y Seguridad y Salud Ocupacional/i,
+      value: "Certificación SIG"
+    },
+    {
+      match: /Implementación Sistema HACCP y Sistema Integrado de Gestión/i,
+      value: "Implementación HACCP + SIG"
+    }
+  ];
+
+  for (const item of replacements) {
+    if (item.match.test(text)) return item.value;
+  }
+
+  return text.length > 55 ? `${text.slice(0, 52).trim()}...` : text;
+}
+
 function formatProjectList(projects, { title = "Proyectos", page = 1, limit = 5, query = "" } = {}) {
   const sorted = [...projects].sort(sortByTargetDateAscNoDateLast);
   const safeLimit = Math.min(Math.max(Number(limit) || 5, 1), 10);
@@ -502,6 +523,7 @@ export async function getProjects({
     })
   };
 }
+
 
 
 
