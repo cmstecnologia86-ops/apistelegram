@@ -231,12 +231,14 @@ function extractStages(project) {
   const candidates = [
     project.stages,
     project.etapas,
+    project.tasks,
+    project.gantt_tasks,
+    project.ganttTasks,
     project.phases,
     project.fases,
     project.timeline,
     project.gantt_stages,
     project.ganttStages,
-    project.tasks,
     project.project_stages,
     project.projectStages
   ];
@@ -330,7 +332,8 @@ async function fetchProjectById(id) {
   for (const endpoint of endpoints) {
     try {
       const response = await gestorIsoRequest(endpoint);
-      const project = response?.data?.project || response?.project || response?.data || response;
+      const raw = response?.data || response?.project || response;
+      const project = raw?.project && typeof raw.project === "object" ? { ...raw.project, tasks: raw.tasks || raw.project.tasks || [] } : raw;
 
       if (project && typeof project === "object" && !Array.isArray(project)) {
         return project;
@@ -550,4 +553,6 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
+
 
