@@ -290,11 +290,7 @@ function extractProjects(response) {
 
 async function fetchProjectsFromGestor() {
   const endpoints = [
-    "/api/gantt/projects?limit=300",
-    "/api/workspace/gantt/projects?limit=300",
-    "/api/projects/gantt?limit=300",
-    "/api/projects?limit=300",
-    "/api/workspace/summary"
+    "/api/projects?limit=300"
   ];
 
   const errors = [];
@@ -362,7 +358,7 @@ function scoreProject(query, project) {
   return Math.max(...values.map((value) => similarity(query, value)));
 }
 
-function formatProjectList(projects, { title = "Proyectos activos", page = 1, limit = 5, query = "" } = {}) {
+function formatProjectList(projects, { title = "Proyectos", page = 1, limit = 5, query = "" } = {}) {
   const sorted = [...projects].sort(sortByTargetDateAscNoDateLast);
   const safeLimit = Math.min(Math.max(Number(limit) || 5, 1), 10);
   const total = sorted.length;
@@ -481,7 +477,7 @@ export async function getProjects({
       source: "gestor_iso",
       text: cleanQuery
         ? `No encontré proyectos para: ${cleanQuery}`
-        : "No encontré proyectos activos."
+        : "No encontré Proyectos."
     };
   }
 
@@ -499,12 +495,13 @@ export async function getProjects({
     intent: "projects",
     source: "gestor_iso",
     text: formatProjectList(filtered, {
-      title: cleanQuery ? `Proyectos · ${cleanQuery}` : "Proyectos activos",
+      title: cleanQuery ? `Proyectos · ${cleanQuery}` : "Proyectos",
       page,
       limit,
       query: cleanQuery
     })
   };
 }
+
 
 
