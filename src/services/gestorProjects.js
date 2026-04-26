@@ -269,10 +269,10 @@ function extractProjects(response) {
   const candidates = [
     response?.data?.ganttProjects,
     response?.data?.gantt_projects,
-    response?.data?.projects,
+    
     response?.ganttProjects,
     response?.gantt_projects,
-    response?.projects,
+    
     response?.workspace?.ganttProjects,
     response?.workspace?.projects,
     response?.data?.items,
@@ -290,7 +290,7 @@ function extractProjects(response) {
 
 async function fetchProjectsFromGestor() {
   const endpoints = [
-    "/api/projects?limit=300"
+    "/api/gantt-projects"
   ];
 
   const errors = [];
@@ -502,6 +502,7 @@ export async function getProjects({
     })
   };
 }
+
 
 
 
