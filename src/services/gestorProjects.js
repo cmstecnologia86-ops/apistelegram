@@ -392,11 +392,11 @@ function formatProjectList(projects, { title = "Proyectos", page = 1, limit = 5,
   const lines = pageItems.map((project, index) => {
     const n = start + index + 1;
     const client = getProjectClient(project);
-    const projectTitle = getProjectTitle(project);
+    const projectTitle = shortProjectTitle(getProjectTitle(project));
     const status = getProjectStatusLabel(project);
     const target = formatDate(getProjectTargetDate(project));
 
-    return `${n}. ${projectTitle} — ${client} — ${status} — objetivo ${target}`;
+    return `${n}. ${client} — ${projectTitle} — ${status} — ${target}`;
   });
 
   const nextHint = currentPage < totalPages
@@ -523,6 +523,7 @@ export async function getProjects({
     })
   };
 }
+
 
 
 
