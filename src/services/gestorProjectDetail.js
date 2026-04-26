@@ -483,7 +483,7 @@ function formatProjectExecutive(project) {
     header.push("", "Opciones:");
 
     stages.forEach((stage, index) => {
-      header.push(`${index + 1}. /proyecto_etapa ${getProjectTitle(project)} | ${index + 1}`);
+      const projectRef = getProjectCode(project) || getProjectTitle(project); header.push(`${index + 1}. /proyecto_etapa ${projectRef} | ${index + 1}`);
     });
 
     header.push("", "Responde con el número de la etapa para ver el detalle.");
@@ -582,6 +582,7 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
 
 
 
