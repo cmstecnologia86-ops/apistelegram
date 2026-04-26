@@ -138,7 +138,24 @@ function getProjectStatus(project) {
 }
 
 function getProjectPriority(project) {
-  return firstValue(project.priority, project.prioridad, project.priority_label, project.priorityLabel) || "Sin prioridad";
+  const rawValue = firstValue(project.priority, project.prioridad, project.priority_label, project.priorityLabel);
+  const raw = normalizeText(rawValue || "");
+
+  const map = {
+    high: "Alta",
+    alta: "Alta",
+    medium: "Media",
+    media: "Media",
+    low: "Baja",
+    baja: "Baja",
+    urgent: "Urgente",
+    urgente: "Urgente",
+    critical: "Crítica",
+    critica: "Crítica",
+    "crítica": "Crítica"
+  };
+
+  return map[raw] || rawValue || "Sin prioridad";
 }
 
 function getProjectPhase(project) {
@@ -185,6 +202,10 @@ function getProjectTargetDate(project) {
 
 function getProjectResponsible(project) {
   return firstValue(
+    project.responsible_name,
+    project.responsibleName,
+    project.owner_name,
+    project.ownerName,
     project.responsible,
     project.responsable,
     project.owner,
@@ -212,7 +233,15 @@ function getStageStatus(stage) {
 }
 
 function getStageProgress(stage) {
-  return progressLabel(firstValue(stage.progress, stage.avance, stage.percent, stage.percentage, stage.completion));
+  return progressLabel(firstValue(
+    stage.progress_percent,
+    stage.progressPercent,
+    stage.progress,
+    stage.avance,
+    stage.percent,
+    stage.percentage,
+    stage.completion
+  ));
 }
 
 function getStageStart(stage) {
@@ -553,6 +582,7 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
 
 
 
