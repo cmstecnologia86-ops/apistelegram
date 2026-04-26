@@ -346,7 +346,7 @@ export async function getActivitiesByStatus({
     ok: true,
     intent: "activities_status",
     source: "gestor_iso",
-    text: `${titleParts.join(" · ")}\nPágina ${currentPage}/${totalPages} · ${start + 1}-${Math.min(end, total)} de ${total}\n\n${lines.join("\n")}${nextHint}`,
+    text: `${titleParts.join(" · ")}\nPágina ${currentPage}/${totalPages} · ${start + 1}-${Math.min(end, total)} de ${total}\n\n${lines.join("\n")}${nextHint}${nextHint ? "\n\nResponde 1 para ejecutar esa opción." : ""}`,
     meta: {
       status: hasStatus ? statusLabel(normalizedStatus) : null,
       client_name: hasClient ? cleanClient : null,
@@ -357,6 +357,7 @@ export async function getActivitiesByStatus({
     }
   };
 }
+
 
 
 
