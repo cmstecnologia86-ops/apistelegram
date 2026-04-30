@@ -2,7 +2,7 @@
   return String(process.env.GESTOR_ISO_BASE_URL || "").replace(/\/+$/, "");
 }
 
-export async function gestorIsoRequest(path) {
+export async function gestorIsoRequest(path, options = {}) {
   const url = baseUrl();
   const user = process.env.GESTOR_ISO_USER;
   const password = process.env.GESTOR_ISO_PASSWORD;
@@ -23,8 +23,16 @@ export async function gestorIsoRequest(path) {
     throw new Error(`Login Gestor ISO falló ${loginRes.status}: ${text.slice(0, 200)}`);
   }
 
+  const method = options.method || "GET";
+  const headers = {
+    ...(cookie ? { cookie } : {}),
+    ...(options.body ? { "content-type": "application/json" } : {})
+  };
+
   const res = await fetch(`${url}${path}`, {
-    headers: cookie ? { cookie } : {}
+    method,
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined
   });
 
   if (!res.ok) {
@@ -34,3 +42,4 @@ export async function gestorIsoRequest(path) {
 
   return res.json();
 }
+
