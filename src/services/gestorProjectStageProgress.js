@@ -242,8 +242,8 @@ function formatConfirm(project, stage, stageNumber, nextProgress) {
     ...note,
     "",
     "Opciones:",
-    `1. /proyecto_avance_aplicar ${projectRef} | ${stageNumber} | ${nextProgress}`,
-    `2. /proyecto_etapa ${projectRef} | ${stageNumber}`,
+    `1. Confirmar cambio — /proyecto_avance_aplicar ${projectRef} | ${stageNumber} | ${nextProgress}`,
+    `2. Cancelar y volver — /proyecto_etapa ${projectRef} | ${stageNumber}`,
     "",
     "Responde 1 para confirmar o 2 para cancelar."
   ].join("\n");
@@ -357,10 +357,11 @@ export async function getProjectStageProgress({
       `Estado actual: ${getStageStatus(updatedStage || selectedStage)}`,
       "",
       "Opciones:",
-      `1. /proyecto_etapa ${projectRef} | ${stageNumber}`,
-      `2. /proyecto_detalle ${projectRef}`,
+      `1. Ver etapa — /proyecto_etapa ${projectRef} | ${stageNumber}`,
+      `2. Volver al proyecto — /proyecto_detalle ${projectRef}`,
       "",
       "Responde 1 para ver la etapa o 2 para volver al proyecto."
     ].join("\n")
   };
 }
+
