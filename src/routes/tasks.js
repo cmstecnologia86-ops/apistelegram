@@ -203,7 +203,25 @@ router.post("/project-stage-dates", async (req, res) => {
   }
 });
 
+router.post("/project-new-draft", async (req, res) => {
+  try {
+    const result = await getProjectNewDraft({
+      prompt: req.body?.prompt || req.body?.contexto || req.body?.context || req.body?.query || ""
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "project_new_draft",
+      source: "gestor_iso",
+      text: `Error al generar borrador de proyecto: ${error.message}`
+    });
+  }
+});
+
 export default router;
+
 
 
 
