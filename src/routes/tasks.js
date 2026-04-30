@@ -7,6 +7,7 @@ import { getMeetings } from "../services/gestorMeetings.js";
 import { getProjects } from "../services/gestorProjects.js";
 import { getProjectDetail } from "../services/gestorProjectDetail.js";
 import { getProjectStageStatus } from "../services/gestorProjectStageStatus.js";
+import { getProjectStageProgress } from "../services/gestorProjectStageProgress.js";
 
 const router = express.Router();
 
@@ -160,6 +161,24 @@ router.post("/project-stage-status", async (req, res) => {
     });
   }
 });
+router.post("/project-stage-progress", async (req, res) => {
+  try {
+    const result = await getProjectStageProgress({
+      query: req.body?.query || req.body?.project || req.body?.proyecto || req.body?.search || "",
+      stage: req.body?.stage || req.body?.etapa || null,
+      progress: req.body?.progress ?? req.body?.avance ?? req.body?.percent ?? null,
+      confirm: req.body?.confirm === true || req.body?.confirmar === true
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 export default router;
 
 
