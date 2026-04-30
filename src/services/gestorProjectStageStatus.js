@@ -210,8 +210,8 @@ function formatConfirm(project, stage, stageNumber, nextStatus) {
     `Nuevo estado: ${statusLabel(nextStatus)}`,
     "",
     "Opciones:",
-    `1. /proyecto_estado_aplicar ${projectRef} | ${stageNumber} | ${nextStatus}`,
-    `2. /proyecto_etapa ${projectRef} | ${stageNumber}`,
+    `1. Confirmar cambio — /proyecto_estado_aplicar ${projectRef} | ${stageNumber} | ${nextStatus}`,
+    `2. Cancelar y volver — /proyecto_etapa ${projectRef} | ${stageNumber}`,
     "",
     "Responde 1 para confirmar o 2 para cancelar."
   ].join("\n");
@@ -318,8 +318,8 @@ export async function getProjectStageStatus({
       `Nuevo estado: ${getStageStatus(updatedStage || { status: nextStatus })}`,
       "",
       "Opciones:",
-      `1. /proyecto_etapa ${projectRef} | ${stageNumber}`,
-      `2. /proyecto_detalle ${projectRef}`,
+      `1. Ver etapa — /proyecto_etapa ${projectRef} | ${stageNumber}`,
+      `2. Volver al proyecto — /proyecto_detalle ${projectRef}`,
       "",
       "Responde 1 para ver la etapa o 2 para volver al proyecto."
     ].join("\n")
