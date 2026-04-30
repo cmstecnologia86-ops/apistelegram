@@ -27,11 +27,11 @@ function statusLabel(value = "") {
     in_progress: "En curso",
     "in progress": "En curso",
     "en curso": "En curso",
-    done: "Completado",
-    completed: "Completado",
-    completado: "Completado",
-    blocked: "Bloqueado",
-    bloqueado: "Bloqueado"
+    done: "Finalizada",
+    completed: "Finalizada",
+    completado: "Finalizada",
+    blocked: "Bloqueada",
+    bloqueado: "Bloqueada"
   };
 
   return map[raw] || value || "Sin estado";
@@ -189,10 +189,10 @@ function formatStatusOptions(project, stage, stageNumber) {
     `Estado actual: ${getStageStatus(stage)}`,
     "",
     "Opciones:",
-    `1. /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | pending`,
-    `2. /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | in_progress`,
-    `3. /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | done`,
-    `4. /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | blocked`,
+    `1. Estado 1: Pendiente — /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | pending`,
+    `2. Estado 2: En curso — /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | in_progress`,
+    `3. Estado 3: Finalizada — /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | done`,
+    `4. Estado 4: Bloqueada — /proyecto_estado_confirmar ${projectRef} | ${stageNumber} | blocked`,
     "",
     "Responde con el número del nuevo estado."
   ].join("\n");
@@ -319,3 +319,4 @@ export async function getProjectStageStatus({
     ].join("\n")
   };
 }
+
