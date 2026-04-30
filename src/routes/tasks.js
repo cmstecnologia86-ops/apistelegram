@@ -142,7 +142,25 @@ router.post("/project-detail", async (req, res) => {
     });
   }
 });
+router.post("/project-stage-status", async (req, res) => {
+  try {
+    const result = await getProjectStageStatus({
+      query: req.body?.query || req.body?.project || req.body?.proyecto || req.body?.search || "",
+      stage: req.body?.stage || req.body?.etapa || null,
+      status: req.body?.status || req.body?.estado || "",
+      confirm: req.body?.confirm === true || req.body?.confirmar === true
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
 export default router;
+
 
 
 
