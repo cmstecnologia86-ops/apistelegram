@@ -537,13 +537,14 @@ function formatStageDetail(project, stageNumber = 1) {
     lines.push("", "Checklist: sin resultados registrados.");
   }
 
+  const projectRef = getProjectCode(project) || getProjectTitle(project);
+
   lines.push(
     "",
-    "Opciones futuras:",
-    "1. Editar estado",
-    "2. Editar avance",
-    "3. Editar responsable",
-    "4. Volver al proyecto"
+    "Opciones:",
+    `1. /proyecto_detalle ${projectRef}`,
+    "",
+    "Responde 1 para volver al proyecto."
   );
 
   return lines.join("\n");
@@ -582,6 +583,7 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
 
 
 
