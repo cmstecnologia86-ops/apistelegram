@@ -9,7 +9,7 @@ import { getProjectDetail } from "../services/gestorProjectDetail.js";
 import { getProjectStageStatus } from "../services/gestorProjectStageStatus.js";
 import { getProjectStageProgress } from "../services/gestorProjectStageProgress.js";
 import { getProjectStageDates } from "../services/gestorProjectStageDates.js";
-import { getProjectNewDraft } from "../services/gestorProjectNew.js";
+import { getProjectNewDraft, getProjectNewCreate } from "../services/gestorProjectNew.js";
 
 const router = express.Router();
 
@@ -216,6 +216,25 @@ router.post("/project-new-draft", async (req, res) => {
       intent: "project_new_draft",
       source: "gestor_iso",
       text: `Error al generar borrador de proyecto: ${error.message}`
+    });
+  }
+});
+
+
+router.post("/project-new-create", async (req, res) => {
+  try {
+    const result = await getProjectNewCreate({
+      draft: req.body?.draft || req.body?.payload || null,
+      confirm: req.body?.confirm === true || req.body?.confirm === "true"
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "project_new_create",
+      source: "gestor_iso",
+      text: `Error al crear proyecto Gantt: ${error.message}`
     });
   }
 });

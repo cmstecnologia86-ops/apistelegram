@@ -238,6 +238,185 @@ function formatDraftSummary(draft) {
   return lines.join("\n");
 }
 
+function normalizeOptionalText(value) {
+  if (value === undefined || value === null) return null;
+  const text = String(value).trim();
+  return text ? text : null;
+}
+
+function normalizePercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function normalizeTaskForCreate(task = {}, index = 0) {
+  const title = normalizeOptionalText(task.title) || `Etapa ${index + 1}`;
+
+  return {
+    title,
+    description: normalizeOptionalText(task.description),
+    phase: normalizeOptionalText(task.phase) || `Etapa ${index + 1}`,
+    order_index: index,
+    start_date: normalizeOptionalText(task.start_date),
+    end_date: normalizeOptionalText(task.end_date),
+    progress_percent: normalizePercent(task.progress_percent),
+    status: normalizeOptionalText(task.status) || "pending",
+    responsible_name: normalizeOptionalText(task.responsible_name),
+    responsible_email: normalizeOptionalText(task.responsible_email),
+    notes: normalizeOptionalText(task.notes),
+    results: safeArray(task.results)
+      .map((result) => ({
+        description: normalizeOptionalText(result?.description),
+        is_completed: Boolean(result?.is_completed)
+      }))
+      .filter((result) => result.description)
+  };
+}
+
+function normalizeDraftForCreate(draft = {}) {
+  const tasks = safeArray(draft.tasks)
+    .map((task, index) => normalizeTaskForCreate(task, index))
+    .filter((task) => task.title);
+
+  return {
+    name: normalizeOptionalText(draft.name),
+    client_id: draft.is_internal ? null : normalizeOptionalText(draft.client_id),
+    code: normalizeOptionalText(draft.code),
+    description: normalizeOptionalText(draft.description),
+    status: normalizeOptionalText(draft.status) || "draft",
+    priority: normalizeOptionalText(draft.priority) || "medium",
+    start_date: normalizeOptionalText(draft.start_date),
+    target_date: normalizeOptionalText(draft.target_date),
+    end_date: normalizeOptionalText(draft.end_date),
+    progress_percent: normalizePercent(draft.progress_percent),
+    health: normalizeOptionalText(draft.health) || "good",
+    is_internal: Boolean(draft.is_internal),
+    notes: normalizeOptionalText(draft.notes),
+    responsible_name: normalizeOptionalText(draft.responsible_name),
+    responsible_email: normalizeOptionalText(draft.responsible_email),
+    responsible_phone: normalizeOptionalText(draft.responsible_phone),
+    tasks
+  };
+}
+
+function formatCreateConfirmation(payload) {
+  const checklistTotal = countChecklist(payload.tasks);
+
+  return [
+    "Confirmar creación de proyecto Gantt",
+    "",
+    `Proyecto: ${payload.name || "Sin nombre"}`,
+    `Cliente CQS asociado: ${payload.client_id ? "Sí" : "No"}`,
+    `Código: ${payload.code || "sin código"}`,
+    `Estado: ${statusLabel(payload.status)}`,
+    `Prioridad: ${priorityLabel(payload.priority)}`,
+    `Inicio: ${formatDate(payload.start_date)}`,
+    `Objetivo: ${formatDate(payload.target_date)}`,
+    `Responsable: ${payload.responsible_name || "sin responsable"}`,
+    "",
+    `Etapas: ${payload.tasks.length}`,
+    `Checklist: ${checklistTotal} resultados`,
+    "",
+    "Opciones:",
+    "1. Confirmar creación",
+    "2. Cancelar",
+    "",
+    "Esta acción creará el proyecto real en Gestor ISO."
+  ].join("\n");
+}
+
+function formatCreatedProject(response, payload) {
+  const id = response?.data?.id || response?.id || "";
+  const project = response?.data?.project || response?.project || null;
+  const projectName = project?.name || payload.name;
+
+  return [
+    "Proyecto Gantt creado",
+    "",
+    `Proyecto: ${projectName}`,
+    `ID: ${id || "sin id"}`,
+    `Cliente CQS asociado: ${payload.client_id ? "Sí" : "No"}`,
+    `Inicio: ${formatDate(payload.start_date)}`,
+    `Objetivo: ${formatDate(payload.target_date)}`,
+    `Etapas: ${payload.tasks.length}`,
+    "",
+    "Opciones:",
+    `1. Ver proyectos — /proyectos`,
+    id ? `2. Ver detalle — /proyecto_detalle ${payload.code || projectName}` : "2. Ver detalle — /proyectos",
+    "",
+    "Proyecto creado correctamente."
+  ].join("\n");
+}
+
+export async function getProjectNewCreate({ draft = null, confirm = false } = {}) {
+  if (!draft || typeof draft !== "object") {
+    return {
+      ok: false,
+      intent: "project_new_create",
+      source: "gestor_iso",
+      text: "Falta el borrador del proyecto. Primero genera un borrador con /tasks/project-new-draft."
+    };
+  }
+
+  const payload = normalizeDraftForCreate(sanitizeDraft(draft));
+
+  if (!payload.name) {
+    return {
+      ok: false,
+      intent: "project_new_create",
+      source: "gestor_iso",
+      text: "No puedo crear el proyecto porque el borrador no tiene nombre."
+    };
+  }
+
+  if (!payload.tasks.length) {
+    return {
+      ok: false,
+      intent: "project_new_create",
+      source: "gestor_iso",
+      text: "No puedo crear el proyecto porque el borrador no tiene etapas."
+    };
+  }
+
+  if (!payload.is_internal && !payload.client_id) {
+    return {
+      ok: false,
+      intent: "project_new_create",
+      source: "gestor_iso",
+      text: "No puedo crear el proyecto porque no tiene cliente CQS asociado. Primero ajusta el contexto o busca el cliente correcto."
+    };
+  }
+
+  if (!confirm) {
+    return {
+      ok: true,
+      intent: "project_new_create_confirm",
+      source: "gestor_iso",
+      text: formatCreateConfirmation(payload),
+      meta: {
+        payload
+      }
+    };
+  }
+
+  const response = await gestorIsoRequest("/api/gantt-projects", {
+    method: "POST",
+    body: payload
+  });
+
+  return {
+    ok: true,
+    intent: "project_new_created",
+    source: "gestor_iso",
+    text: formatCreatedProject(response, payload),
+    meta: {
+      response
+    }
+  };
+}
+
+
 export async function getProjectNewDraft({ prompt = "" } = {}) {
   const cleanPrompt = String(prompt || "").trim();
 
