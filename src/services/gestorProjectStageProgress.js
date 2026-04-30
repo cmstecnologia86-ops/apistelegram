@@ -223,9 +223,13 @@ function formatProgressOptions(project, stage, stageNumber) {
 function formatConfirm(project, stage, stageNumber, nextProgress) {
   const projectRef = getProjectCode(project) || getProjectTitle(project);
 
+  const currentStatusRaw = normalizeText(firstValue(stage.status, stage.estado, stage.state) || "");
+
   const note = nextProgress === 100
     ? ["", "Nota: si el avance queda en 100%, recuerda revisar si el estado también debe quedar como Finalizada."]
-    : [];
+    : nextProgress < 100 && ["done", "completed", "completado", "finalizado", "finalizada"].includes(currentStatusRaw)
+      ? ["", "Nota: al bajar el avance bajo 100%, el estado pasará automáticamente a En curso."]
+      : [];
 
   return [
     "Confirmar cambio de avance",
@@ -317,11 +321,23 @@ export async function getProjectStageProgress({
     };
   }
 
+  const currentStatusRaw = normalizeText(firstValue(
+    selectedStage.status,
+    selectedStage.estado,
+    selectedStage.state
+  ) || "");
+
+  const updateBody = {
+    progress_percent: nextProgress
+  };
+
+  if (nextProgress < 100 && ["done", "completed", "completado", "finalizado", "finalizada"].includes(currentStatusRaw)) {
+    updateBody.status = "in_progress";
+  }
+
   await gestorIsoRequest(`/api/gantt-projects/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}`, {
     method: "PATCH",
-    body: {
-      progress_percent: nextProgress
-    }
+    body: updateBody
   });
 
   const updatedProject = await fetchProjectById(id);
