@@ -152,6 +152,41 @@ function getDraftFromResponse(response) {
   return response?.data?.draft || response?.draft || response?.data || null;
 }
 
+function looksLikeGenericResponsible(value = "") {
+  const raw = normalizeText(value);
+
+  return [
+    "juan perez",
+    "juan pérez",
+    "maria perez",
+    "maría pérez",
+    "consultor responsable",
+    "nombre responsable",
+    "responsable proyecto",
+    "responsable del proyecto"
+  ].includes(raw);
+}
+
+function sanitizeDraft(draft = {}) {
+  const clean = { ...draft };
+
+  if (looksLikeGenericResponsible(clean.responsible_name)) {
+    clean.responsible_name = "";
+  }
+
+  clean.tasks = safeArray(clean.tasks).map((task) => {
+    const next = { ...task };
+
+    if (looksLikeGenericResponsible(next.responsible_name)) {
+      next.responsible_name = "";
+    }
+
+    return next;
+  });
+
+  return clean;
+}
+
 function countChecklist(tasks) {
   return safeArray(tasks).reduce((total, task) => total + safeArray(task?.results).length, 0);
 }
@@ -215,16 +250,27 @@ export async function getProjectNewDraft({ prompt = "" } = {}) {
     };
   }
 
+  const enrichedPrompt = [
+    "Instrucciones operativas para este borrador:",
+    "- No inventes nombres de responsables.",
+    "- Si el usuario no indica responsable, deja responsible_name, responsible_email y responsible_phone vacíos.",
+    "- No uses nombres de ejemplo como Juan Pérez, María Pérez o Consultor responsable.",
+    "- Mantén la asociación al cliente CQS exacto si existe coincidencia clara.",
+    "",
+    "Contexto entregado por el usuario:",
+    cleanPrompt
+  ].join("\n");
+
   const response = await gestorIsoRequest("/api/gantt-projects/ai-draft", {
     method: "POST",
     body: {
-      prompt: cleanPrompt
+      prompt: enrichedPrompt
     }
   });
 
   const rawDraft = getDraftFromResponse(response);
   const draft = rawDraft && typeof rawDraft === "object"
-    ? await resolveCqsClientForDraft(rawDraft)
+    ? sanitizeDraft(await resolveCqsClientForDraft(rawDraft))
     : rawDraft;
 
   if (!draft || typeof draft !== "object") {
