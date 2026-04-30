@@ -561,7 +561,8 @@ function formatStageDetail(project, stageNumber = 1) {
     "",
     "Opciones:",
     `1. Editar estado — /proyecto_estado ${projectRef} | ${stageNumber}`,
-    `2. Volver — /proyecto_detalle ${projectRef}`,
+    `2. Editar avance — /proyecto_avance ${projectRef} | ${stageNumber}`,
+    `3. Volver — /proyecto_detalle ${projectRef}`,
     "",
     "Responde con el número de la opción."
   );
