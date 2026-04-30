@@ -61,6 +61,93 @@ function safeArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function normalizeText(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function compactText(value = "") {
+  return normalizeText(value).replace(/\s+/g, "");
+}
+
+function matchScore(a = "", b = "") {
+  const x = compactText(a);
+  const y = compactText(b);
+
+  if (!x || !y) return 0;
+  if (x === y) return 1;
+  if (x.includes(y) || y.includes(x)) return 0.94;
+
+  return 0;
+}
+
+function standardMatches(draftStandard = "", clientStandard = "") {
+  const draft = normalizeText(draftStandard);
+  const client = normalizeText(clientStandard);
+
+  if (!draft || !client) return true;
+  if (draft === client) return true;
+  if (draft.includes(client) || client.includes(draft)) return true;
+
+  const draftTokens = new Set(draft.split(" ").filter(Boolean));
+  const clientTokens = client.split(" ").filter(Boolean);
+
+  return clientTokens.some((token) => draftTokens.has(token));
+}
+
+async function resolveCqsClientForDraft(draft = {}) {
+  if (draft?.client_id) return draft;
+
+  const detectedName = firstValue(draft?.detected_client_name, draft?.client_name, draft?.name);
+  if (!detectedName) return draft;
+
+  const params = new URLSearchParams();
+  params.set("search", detectedName);
+  params.set("limit", "20");
+
+  const response = await gestorIsoRequest(`/api/clients?${params.toString()}`);
+  const clients = Array.isArray(response?.data?.clients) ? response.data.clients : [];
+
+  if (!clients.length) return draft;
+
+  const detectedStandard = firstValue(draft?.detected_standard, "");
+
+  const scored = clients
+    .map((client) => {
+      const nameScore = matchScore(detectedName, client?.name || "");
+      const standardOk = standardMatches(detectedStandard, client?.standard || "");
+      const score = nameScore + (standardOk ? 0.25 : 0);
+
+      return { client, score, standardOk };
+    })
+    .filter((item) => item.score >= 0.90)
+    .sort((a, b) => b.score - a.score);
+
+  const best = scored[0]?.client;
+  const clientId = firstValue(best?.id, best?.codigo, best?.code);
+
+  if (!clientId) return draft;
+
+  return {
+    ...draft,
+    client_id: String(clientId),
+    detected_client_name: firstValue(draft.detected_client_name, best.name),
+    detected_standard: firstValue(draft.detected_standard, best.standard),
+    detected_scope_hint: firstValue(draft.detected_scope_hint, best.scope, best.alcance),
+    cqs_fallback_match: {
+      id: String(clientId),
+      name: best.name || "",
+      standard: best.standard || "",
+      score: scored[0]?.score || 0
+    }
+  };
+}
+
 function getDraftFromResponse(response) {
   return response?.data?.draft || response?.draft || response?.data || null;
 }
@@ -135,7 +222,10 @@ export async function getProjectNewDraft({ prompt = "" } = {}) {
     }
   });
 
-  const draft = getDraftFromResponse(response);
+  const rawDraft = getDraftFromResponse(response);
+  const draft = rawDraft && typeof rawDraft === "object"
+    ? await resolveCqsClientForDraft(rawDraft)
+    : rawDraft;
 
   if (!draft || typeof draft !== "object") {
     return {
