@@ -204,15 +204,13 @@ function formatDateOptions(project, stage, stageNumber) {
     "",
     "Para cambiar fechas, usa formato AAAA-MM-DD.",
     "",
-    "Ejemplos:",
-    `Cambiar inicio — /proyecto_fechas ${projectRef} | ${stageNumber} | inicio 2026-05-10`,
-    `Cambiar término — /proyecto_fechas ${projectRef} | ${stageNumber} | termino 2026-05-20`,
-    `Cambiar ambas fechas — /proyecto_fechas ${projectRef} | ${stageNumber} | 2026-05-10 | 2026-05-20`,
-    "",
     "Opciones:",
-    `1. Volver — /proyecto_etapa ${projectRef} | ${stageNumber}`,
+    `1. Cambiar inicio — /proyecto_fechas ${projectRef} | ${stageNumber} | inicio 2026-05-10`,
+    `2. Cambiar término — /proyecto_fechas ${projectRef} | ${stageNumber} | termino 2026-05-20`,
+    `3. Cambiar ambas fechas — /proyecto_fechas ${projectRef} | ${stageNumber} | 2026-05-10 | 2026-05-20`,
+    `4. Volver — /proyecto_etapa ${projectRef} | ${stageNumber}`,
     "",
-    "Responde 1 para volver."
+    "Responde con el número de la opción."
   ].join("\n");
 }
 
