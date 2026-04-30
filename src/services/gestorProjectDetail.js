@@ -497,7 +497,9 @@ function formatProjectExecutive(project) {
     header.push("", "Opciones:");
 
     stages.forEach((stage, index) => {
-      const projectRef = getProjectCode(project) || getProjectTitle(project); header.push(`${index + 1}. /proyecto_etapa ${projectRef} | ${index + 1}`);
+      const projectRef = getProjectCode(project) || getProjectTitle(project);
+      const stageName = getStageTitle(stage);
+      header.push(`${index + 1}. Ver detalle etapa ${index + 1}: ${stageName} — /proyecto_etapa ${projectRef} | ${index + 1}`);
     });
 
     header.push("", "Responde con el número de la etapa para ver el detalle.");
@@ -556,9 +558,10 @@ function formatStageDetail(project, stageNumber = 1) {
   lines.push(
     "",
     "Opciones:",
-    `1. /proyecto_detalle ${projectRef}`,
+    `1. Editar estado de la etapa — /proyecto_estado ${projectRef} | ${stageNumber}`,
+    `2. Volver al proyecto — /proyecto_detalle ${projectRef}`,
     "",
-    "Responde 1 para volver al proyecto."
+    "Responde con el número de la opción."
   );
 
   return lines.join("\n");
