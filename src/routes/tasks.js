@@ -9,6 +9,7 @@ import { getProjectDetail } from "../services/gestorProjectDetail.js";
 import { getProjectStageStatus } from "../services/gestorProjectStageStatus.js";
 import { getProjectStageProgress } from "../services/gestorProjectStageProgress.js";
 import { getProjectStageDates } from "../services/gestorProjectStageDates.js";
+import { getProjectNewDraft } from "../services/gestorProjectNew.js";
 
 const router = express.Router();
 
@@ -203,6 +204,7 @@ router.post("/project-stage-dates", async (req, res) => {
 });
 
 export default router;
+
 
 
 
