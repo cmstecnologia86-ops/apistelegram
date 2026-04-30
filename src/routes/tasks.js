@@ -179,7 +179,30 @@ router.post("/project-stage-progress", async (req, res) => {
   }
 });
 
+router.post("/project-stage-dates", async (req, res) => {
+  try {
+    const result = await getProjectStageDates({
+      query: req.body?.query || req.body?.project || req.body?.proyecto || req.body?.search || "",
+      stage: req.body?.stage || req.body?.etapa || null,
+      startDate: req.body?.start_date || req.body?.startDate || req.body?.inicio || "",
+      endDate: req.body?.end_date || req.body?.endDate || req.body?.termino || req.body?.término || req.body?.fin || "",
+      rawDateText: req.body?.raw || req.body?.texto || "",
+      confirm: req.body?.confirm === true || req.body?.confirm === "true"
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "project_stage_dates",
+      source: "gestor_iso",
+      text: `Error al editar fechas de etapa: ${error.message}`
+    });
+  }
+});
+
 export default router;
+
 
 
 
