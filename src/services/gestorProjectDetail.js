@@ -66,7 +66,7 @@ function statusLabel(value = "") {
     pending: "Pendiente",
     pendiente: "Pendiente",
     completed: "Completado",
-    completado: "Completado",
+    completado: "Finalizada",
     finalizado: "Completado",
     blocked: "Bloqueada",
     bloqueado: "Bloqueada",
@@ -600,6 +600,7 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
 
 
 
