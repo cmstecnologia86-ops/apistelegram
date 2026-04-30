@@ -205,12 +205,46 @@ function formatDateOptions(project, stage, stageNumber) {
     "Para cambiar fechas, usa formato AAAA-MM-DD.",
     "",
     "Opciones:",
-    `1. Cambiar inicio — /proyecto_fechas ${projectRef} | ${stageNumber} | inicio 2026-05-10`,
-    `2. Cambiar término — /proyecto_fechas ${projectRef} | ${stageNumber} | termino 2026-05-20`,
-    `3. Cambiar ambas fechas — /proyecto_fechas ${projectRef} | ${stageNumber} | 2026-05-10 | 2026-05-20`,
+    `1. Cambiar inicio — /proyecto_fechas ${projectRef} | ${stageNumber} | elegir_inicio`,
+    `2. Cambiar término — /proyecto_fechas ${projectRef} | ${stageNumber} | elegir_termino`,
+    `3. Cambiar ambas fechas — /proyecto_fechas ${projectRef} | ${stageNumber} | elegir_ambas`,
     `4. Volver — /proyecto_etapa ${projectRef} | ${stageNumber}`,
     "",
     "Responde con el número de la opción."
+  ].join("\n");
+}
+
+function formatDateInputHelp(project, stage, stageNumber, mode) {
+  const projectRef = getProjectCode(project) || getProjectTitle(project);
+
+  const title = mode === "inicio"
+    ? "Cambiar inicio"
+    : mode === "termino"
+      ? "Cambiar término"
+      : "Cambiar ambas fechas";
+
+  const instruction = mode === "inicio"
+    ? `Escribe la nueva fecha de inicio así:\n/proyecto_fechas ${projectRef} | ${stageNumber} | inicio 2026-05-10`
+    : mode === "termino"
+      ? `Escribe la nueva fecha de término así:\n/proyecto_fechas ${projectRef} | ${stageNumber} | termino 2026-05-22`
+      : `Escribe ambas fechas así:\n/proyecto_fechas ${projectRef} | ${stageNumber} | 2026-05-10 | 2026-05-22`;
+
+  return [
+    `${title} · Etapa #${stageNumber}`,
+    "",
+    `Proyecto: ${getProjectClient(project)}`,
+    `Etapa: ${getStageTitle(stage)}`,
+    `Inicio actual: ${formatDate(getStageStart(stage))}`,
+    `Término actual: ${formatDate(getStageEnd(stage))}`,
+    "",
+    "Formato requerido: AAAA-MM-DD",
+    "",
+    instruction,
+    "",
+    "Opciones:",
+    `1. Volver — /proyecto_fechas ${projectRef} | ${stageNumber}`,
+    "",
+    "Responde 1 para volver."
   ].join("\n");
 }
 
@@ -310,6 +344,35 @@ export async function getProjectStageDates({
       intent: "project_stage_dates",
       source: "gestor_iso",
       text: `No encontré la etapa ${stageNumber} para este proyecto.`
+    };
+  }
+
+  const rawMode = normalizeText(rawDateText).replace(/\s+/g, "_");
+
+  if (rawMode === "elegir_inicio") {
+    return {
+      ok: true,
+      intent: "project_stage_dates_choose_start",
+      source: "gestor_iso",
+      text: formatDateInputHelp(project, selectedStage, stageNumber, "inicio")
+    };
+  }
+
+  if (rawMode === "elegir_termino" || rawMode === "elegir_término") {
+    return {
+      ok: true,
+      intent: "project_stage_dates_choose_end",
+      source: "gestor_iso",
+      text: formatDateInputHelp(project, selectedStage, stageNumber, "termino")
+    };
+  }
+
+  if (rawMode === "elegir_ambas") {
+    return {
+      ok: true,
+      intent: "project_stage_dates_choose_both",
+      source: "gestor_iso",
+      text: formatDateInputHelp(project, selectedStage, stageNumber, "ambas")
     };
   }
 
