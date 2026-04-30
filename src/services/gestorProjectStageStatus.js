@@ -289,11 +289,17 @@ export async function getProjectStageStatus({
     };
   }
 
+  const updateBody = {
+    status: nextStatus
+  };
+
+  if (nextStatus === "done") {
+    updateBody.progress_percent = 100;
+  }
+
   await gestorIsoRequest(`/api/gantt-projects/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}`, {
     method: "PATCH",
-    body: {
-      status: nextStatus
-    }
+    body: updateBody
   });
 
   const updatedProject = await fetchProjectById(id);
