@@ -252,8 +252,22 @@ function getStageEnd(stage) {
   return firstValue(stage.end_date, stage.endDate, stage.termino, stage.término, stage.fecha_termino, stage.deadline, stage.due_date);
 }
 
-function getStageResponsible(stage) {
-  return firstValue(stage.responsible, stage.responsable, stage.owner, stage.manager, stage.assignee) || "Sin responsable";
+function getStageResponsible(stage, project = {}) {
+  return firstValue(
+    stage.responsible_name,
+    stage.responsibleName,
+    stage.owner_name,
+    stage.ownerName,
+    stage.responsible_email,
+    stage.responsibleEmail,
+    stage.responsible,
+    stage.responsable,
+    stage.owner,
+    stage.manager,
+    stage.assignee,
+    stage.assigned_to,
+    stage.assignedTo
+  ) || getProjectResponsible(project);
 }
 
 function extractStages(project) {
@@ -514,7 +528,7 @@ function formatStageDetail(project, stageNumber = 1) {
     `Avance: ${getStageProgress(stage)}`,
     `Inicio: ${formatDate(getStageStart(stage))}`,
     `Término: ${formatDate(getStageEnd(stage))}`,
-    `Responsable: ${getStageResponsible(stage)}`
+    `Responsable: ${getStageResponsible(stage, project)}`
   ];
 
   const description = getStageDescription(stage);
@@ -583,6 +597,7 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
 
 
 
