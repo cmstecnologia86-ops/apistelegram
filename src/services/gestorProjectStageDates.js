@@ -205,9 +205,9 @@ function formatDateOptions(project, stage, stageNumber) {
     "Para cambiar fechas, usa formato AAAA-MM-DD.",
     "",
     "Ejemplos:",
-    `/proyecto_fechas ${projectRef} | ${stageNumber} | inicio 2026-05-10`,
-    `/proyecto_fechas ${projectRef} | ${stageNumber} | termino 2026-05-20`,
-    `/proyecto_fechas ${projectRef} | ${stageNumber} | 2026-05-10 | 2026-05-20`,
+    `Cambiar inicio — /proyecto_fechas ${projectRef} | ${stageNumber} | inicio 2026-05-10`,
+    `Cambiar término — /proyecto_fechas ${projectRef} | ${stageNumber} | termino 2026-05-20`,
+    `Cambiar ambas fechas — /proyecto_fechas ${projectRef} | ${stageNumber} | 2026-05-10 | 2026-05-20`,
     "",
     "Opciones:",
     `1. Volver — /proyecto_etapa ${projectRef} | ${stageNumber}`,
@@ -381,3 +381,4 @@ export async function getProjectStageDates({
     ].join("\n")
   };
 }
+
