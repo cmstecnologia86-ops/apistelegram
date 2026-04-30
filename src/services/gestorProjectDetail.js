@@ -562,7 +562,8 @@ function formatStageDetail(project, stageNumber = 1) {
     "Opciones:",
     `1. Editar estado — /proyecto_estado ${projectRef} | ${stageNumber}`,
     `2. Editar avance — /proyecto_avance ${projectRef} | ${stageNumber}`,
-    `3. Volver — /proyecto_detalle ${projectRef}`,
+    `3. Editar fechas — /proyecto_fechas ${projectRef} | ${stageNumber}`,
+    `4. Volver — /proyecto_detalle ${projectRef}`,
     "",
     "Responde con el número de la opción."
   );
@@ -603,6 +604,7 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
 
 
 
