@@ -499,7 +499,7 @@ function formatProjectExecutive(project) {
     stages.forEach((stage, index) => {
       const projectRef = getProjectCode(project) || getProjectTitle(project);
       const stageName = getStageTitle(stage);
-      header.push(`${index + 1}. Etapa ${index + 1}: ${stageName} — /proyecto_etapa ${projectRef} | ${index + 1}`);
+      header.push(`${index + 1}. Detalles Etapa ${index + 1} — /proyecto_etapa ${projectRef} | ${index + 1}`);
     });
 
     header.push("", "Responde con el número de la etapa para ver el detalle.");
@@ -600,6 +600,7 @@ export async function getProjectDetail({
     text: stage ? formatStageDetail(result.project, stage) : formatProjectExecutive(result.project)
   };
 }
+
 
 
 
