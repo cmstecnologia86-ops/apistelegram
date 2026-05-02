@@ -153,6 +153,33 @@ function normalizeForMatch(value = "") {
     .trim();
 }
 
+function extractClientCandidateFromPrompt(prompt = "") {
+  const text = String(prompt || "").replace(/\s+/g, " ").trim();
+
+  const patterns = [
+    /(?:crear|generar|registrar)\s+actividad\s+para\s+(.+?)(?:\s+por\s+|\s+para\s+seguimiento|\s+fecha\s+|\s+responsable\s+|\.|$)/i,
+    /(?:cliente|empresa)\s*[:\-]?\s+(.+?)(?:\s+por\s+|\s+para\s+seguimiento|\s+fecha\s+|\s+responsable\s+|\.|$)/i,
+    /para\s+(.+?)(?:\s+por\s+|\s+para\s+seguimiento|\s+fecha\s+|\s+responsable\s+|\.|$)/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    const candidate = normalizeOptionalText(match?.[1]);
+    if (candidate && candidate.length >= 3) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+async function resolveClientFromPrompt(prompt = "") {
+  const candidate = extractClientCandidateFromPrompt(prompt);
+  if (!candidate) return null;
+
+  return await resolveClientFromText(candidate);
+}
+
 function clientMatchScore(client, haystack) {
   const names = [
     client?.name,
@@ -350,8 +377,9 @@ export async function getActivityNewDraft({ prompt = "" } = {}) {
   let clientName = await resolveClientName(draft.client_id);
 
   if (!draft.client_id) {
-    const fallbackClient = await resolveClientFromText([
-      cleanPrompt,
+    const promptClient = await resolveClientFromPrompt(cleanPrompt);
+
+    const fallbackClient = promptClient || await resolveClientFromText([
       draft.name,
       draft.description,
       draft.notes
