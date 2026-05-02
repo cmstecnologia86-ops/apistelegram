@@ -115,10 +115,7 @@ function sanitizeDraft(draft = {}) {
   };
 }
 
-async function resolveClientName(clientId) {
-  const cleanId = normalizeOptionalText(clientId);
-  if (!cleanId) return null;
-
+async function getClientCatalog() {
   try {
     const response = await gestorIsoRequest("/api/clients?limit=500");
     const clients =
@@ -128,14 +125,90 @@ async function resolveClientName(clientId) {
       response?.items ||
       [];
 
-    const found = Array.isArray(clients)
-      ? clients.find((client) => String(client?.id || "") === cleanId)
-      : null;
-
-    return found?.name || found?.legal_name || null;
+    return Array.isArray(clients) ? clients : [];
   } catch {
-    return null;
+    return [];
   }
+}
+
+async function resolveClientName(clientId) {
+  const cleanId = normalizeOptionalText(clientId);
+  if (!cleanId) return null;
+
+  const clients = await getClientCatalog();
+  const found = clients.find((client) => String(client?.id || "") === cleanId);
+
+  return found?.name || found?.legal_name || null;
+}
+
+function normalizeForMatch(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " y ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\b(spa|s p a|ltda|limitada|sa|s a|eirl|sociedad|comercial|empresa)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function clientMatchScore(client, haystack) {
+  const names = [
+    client?.name,
+    client?.legal_name,
+    client?.business_name,
+    client?.razon_social
+  ].filter(Boolean);
+
+  let best = 0;
+
+  for (const name of names) {
+    const normalizedName = normalizeForMatch(name);
+    if (!normalizedName) continue;
+
+    if (haystack.includes(normalizedName)) {
+      best = Math.max(best, 100 + normalizedName.length);
+      continue;
+    }
+
+    const tokens = normalizedName
+      .split(" ")
+      .filter((token) => token.length >= 3);
+
+    if (!tokens.length) continue;
+
+    const hits = tokens.filter((token) => haystack.includes(token)).length;
+    const ratio = hits / tokens.length;
+
+    if (ratio >= 0.75) best = Math.max(best, Math.round(ratio * 80) + hits);
+  }
+
+  return best;
+}
+
+async function resolveClientFromText(text = "") {
+  const clients = await getClientCatalog();
+  const haystack = normalizeForMatch(text);
+
+  if (!haystack || !clients.length) return null;
+
+  const ranked = clients
+    .map((client) => ({
+      client,
+      score: clientMatchScore(client, haystack)
+    }))
+    .filter((item) => item.score >= 60)
+    .sort((a, b) => b.score - a.score);
+
+  const best = ranked[0]?.client || null;
+
+  if (!best?.id) return null;
+
+  return {
+    id: String(best.id),
+    name: best.name || best.legal_name || null
+  };
 }
 
 function formatDraftText(draft, clientName = null) {
@@ -274,7 +347,22 @@ export async function getActivityNewDraft({ prompt = "" } = {}) {
     responsible_name: responsibleFromPrompt || response?.data?.draft?.responsible_name || null
   });
 
-  const clientName = await resolveClientName(draft.client_id);
+  let clientName = await resolveClientName(draft.client_id);
+
+  if (!draft.client_id) {
+    const fallbackClient = await resolveClientFromText([
+      cleanPrompt,
+      draft.name,
+      draft.description,
+      draft.notes
+    ].filter(Boolean).join(" "));
+
+    if (fallbackClient?.id) {
+      draft.client_id = fallbackClient.id;
+      draft.is_internal = false;
+      clientName = fallbackClient.name || await resolveClientName(fallbackClient.id);
+    }
+  }
 
   return {
     ok: true,
