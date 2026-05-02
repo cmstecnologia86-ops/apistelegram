@@ -239,7 +239,43 @@ router.post("/project-new-create", async (req, res) => {
   }
 });
 
+router.post("/activity-new-draft", async (req, res) => {
+  try {
+    const result = await getActivityNewDraft({
+      prompt: req.body?.prompt || req.body?.contexto || req.body?.context || req.body?.query || ""
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "activity_new_draft",
+      source: "gestor_iso",
+      text: `Error al generar borrador de actividad: ${error.message}`
+    });
+  }
+});
+
+router.post("/activity-new-create", async (req, res) => {
+  try {
+    const result = await getActivityNewCreate({
+      draft: req.body?.draft || req.body?.payload || null,
+      confirm: req.body?.confirm === true || req.body?.confirm === "true"
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "activity_new_create",
+      source: "gestor_iso",
+      text: `Error al crear actividad: ${error.message}`
+    });
+  }
+});
+
 export default router;
+
 
 
 
