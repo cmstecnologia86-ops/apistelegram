@@ -11,6 +11,7 @@ import { getProjectStageProgress } from "../services/gestorProjectStageProgress.
 import { getProjectStageDates } from "../services/gestorProjectStageDates.js";
 import { getProjectNewDraft, getProjectNewCreate } from "../services/gestorProjectNew.js";
 import { getActivityNewDraft, getActivityNewCreate } from "../services/gestorActivityNew.js";
+import { getMeetingNewDraft, getMeetingNewCreate } from "../services/gestorMeetingNew.js";
 
 const router = express.Router();
 
@@ -275,7 +276,44 @@ router.post("/activity-new-create", async (req, res) => {
   }
 });
 
+router.post("/meeting-new-draft", async (req, res) => {
+  try {
+    const result = await getMeetingNewDraft({
+      prompt: req.body?.prompt || ""
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("TASK_MEETING_NEW_DRAFT_ERROR", error);
+    res.status(500).json({
+      ok: false,
+      intent: "meeting_new_draft",
+      source: "gestor_iso",
+      text: error?.message || "No fue posible generar el borrador de reunión."
+    });
+  }
+});
+
+router.post("/meeting-new-create", async (req, res) => {
+  try {
+    const result = await getMeetingNewCreate({
+      draft: req.body?.draft || null,
+      confirm: req.body?.confirm === true
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("TASK_MEETING_NEW_CREATE_ERROR", error);
+    res.status(500).json({
+      ok: false,
+      intent: "meeting_new_create",
+      source: "gestor_iso",
+      text: error?.message || "No fue posible crear la reunión."
+    });
+  }
+});
 export default router;
+
 
 
 
