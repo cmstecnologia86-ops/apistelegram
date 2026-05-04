@@ -1,4 +1,4 @@
-﻿import { ImapFlow } from "imapflow";
+import { ImapFlow } from "imapflow";
 
 const DEFAULT_MODEL = "gpt-5-nano";
 
@@ -164,11 +164,11 @@ async function fetchRecentEmails({ hours = 48, limit = 40 } = {}) {
 
 function buildFallbackText({ hours, account, emails, total, unread }) {
   const lines = [];
-  lines.push(`Resumen de correos de las Ãºltimas ${hours} horas`);
+  lines.push(`Resumen de correos de las últimas ${hours} horas`);
   lines.push("");
   lines.push(`Cuenta: ${account || "No informada"}`);
   lines.push(`Correos encontrados: ${total}`);
-  lines.push(`No leÃ­dos: ${unread}`);
+  lines.push(`No leídos: ${unread}`);
   lines.push("");
 
   if (!emails.length) {
@@ -176,12 +176,12 @@ function buildFallbackText({ hours, account, emails, total, unread }) {
     return lines.join("\n");
   }
 
-  lines.push("Ãšltimos correos:");
+  lines.push("Últimos correos:");
   emails.slice(0, 12).forEach((mail, index) => {
     lines.push(`${index + 1}. ${mail.subject}`);
     lines.push(`   De: ${mail.from}`);
     lines.push(`   Fecha: ${formatDateCL(mail.receivedAt)}`);
-    lines.push(`   Estado: ${mail.unread ? "No leÃ­do" : "LeÃ­do"}`);
+    lines.push(`   Estado: ${mail.unread ? "No leído" : "LeÃ­do"}`);
   });
 
   return lines.join("\n");
@@ -205,18 +205,18 @@ async function summarizeWithOpenAI({ hours, account, emails, total, unread }) {
   }));
 
   const prompt = [
-    `Genera un resumen ejecutivo en espaÃ±ol de los correos recibidos en las Ãºltimas ${hours} horas.`,
+    `Genera un resumen ejecutivo en español de los correos recibidos en las últimas ${hours} horas.`,
     "Contexto: el usuario es CMS Consultores y necesita saber quÃ© pasÃ³, quÃ© es importante y quÃ© deberÃ­a responder o revisar.",
     "",
     `Cuenta: ${account}`,
     `Total encontrados: ${total}`,
-    `No leÃ­dos: ${unread}`,
+    `No leídos: ${unread}`,
     "",
     "Correos:",
     JSON.stringify(compactEmails, null, 2),
     "",
     "Formato requerido:",
-    "Resumen de correos de las Ãºltimas X horas",
+    "Resumen de correos de las últimas X horas",
     "1) Panorama general",
     "2) Correos importantes o de clientes",
     "3) Alertas / plataformas / sistemas",
