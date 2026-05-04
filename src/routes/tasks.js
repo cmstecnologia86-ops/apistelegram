@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import { gestorIsoRequest } from "../services/gestorIsoClient.js";
 import { getClientCodes } from "../services/gestorClients.js";
 import { getClientsExpiringFromGestor } from "../services/gestorExpirations.js";
@@ -13,6 +13,7 @@ import { getProjectNewDraft, getProjectNewCreate } from "../services/gestorProje
 import { getActivityNewDraft, getActivityNewCreate } from "../services/gestorActivityNew.js";
 import { getMeetingNewDraft, getMeetingNewCreate } from "../services/gestorMeetingNew.js";
 import { getEmailDigest } from "../services/emailDigest.js";
+import { getSurvioDraftPreview, getSurvioDraftSend } from "../services/survioDraft.js";
 
 const router = express.Router();
 
@@ -327,6 +328,45 @@ router.post("/email-digest", async (req, res) => {
       intent: "email_digest",
       source: "imap_openai",
       text: `Error al generar resumen de correos: ${error.message}`,
+      error: error.message
+    });
+  }
+});
+
+router.post("/survio-draft-preview", async (req, res) => {
+  try {
+    const result = await getSurvioDraftPreview({
+      cliente: req.body?.cliente || req.body?.client_name || req.body?.client || req.body?.query || ""
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "survio_draft_preview",
+      source: "gestor_iso",
+      text: `Error al buscar cliente Survio: ${error.message}`,
+      error: error.message
+    });
+  }
+});
+
+router.post("/survio-draft-send", async (req, res) => {
+  try {
+    const result = await getSurvioDraftSend({
+      client: req.body?.client || req.body?.cliente_confirmado || null,
+      clientId: req.body?.client_id || req.body?.id || "",
+      cliente: req.body?.cliente || req.body?.client_name || req.body?.client_query || req.body?.query || "",
+      survioUrl: req.body?.survio_url || req.body?.survioUrl || ""
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "survio_draft_send",
+      source: "gestor_iso_smtp",
+      text: `Error al enviar borrador Survio: ${error.message}`,
       error: error.message
     });
   }
