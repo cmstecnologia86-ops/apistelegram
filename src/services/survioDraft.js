@@ -224,8 +224,8 @@ function buildSurvioHtml(data, survioUrl = SURVIO_PLACEHOLDER) {
 
   const cell = "border:1px solid #ffffff;padding:7px 8px;font-size:12px;vertical-align:top;";
   const head = "background:#0f5f7d;color:#ffffff;font-weight:700;text-align:left;";
-  const body = "background:#7fc7e3;color:#000000;";
-  const highlight = "background:#fff200;font-weight:700;";
+  const body = "background:#f7fbfd;color:#111111;";
+  const highlight = "font-weight:700;color:#111111;";
 
   return `
 <div style="font-family:Arial, Helvetica, sans-serif;color:#111;font-size:14px;line-height:1.45;">
