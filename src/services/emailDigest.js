@@ -1,6 +1,10 @@
 import { ImapFlow } from "imapflow";
 
 const DEFAULT_MODEL = "gpt-5-nano";
+const DEFAULT_EXCLUDED_DOMAINS = [
+  "bancochile.cl",
+  "afphabitat.cl"
+];
 
 function boolEnv(value, fallback = false) {
   if (value == null || value === "") return fallback;
@@ -17,6 +21,35 @@ function cleanText(value, max = 240) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, max);
+}
+
+function normalizeAddress(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function extractDomainFromSender(value) {
+  const text = String(value || "").toLowerCase();
+  const match = text.match(/[a-z0-9._%+-]+@([a-z0-9.-]+\.[a-z]{2,})/i);
+  return match ? match[1].toLowerCase() : "";
+}
+
+function getExcludedDomains() {
+  const extra = String(process.env.EMAIL_DIGEST_EXCLUDE_DOMAINS || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+
+  return Array.from(new Set([...DEFAULT_EXCLUDED_DOMAINS, ...extra]));
+}
+
+function isExcludedSender(sender, excludedDomains) {
+  const domain = extractDomainFromSender(sender);
+  if (!domain) return false;
+
+  return excludedDomains.some((excluded) => {
+    const normalized = normalizeAddress(excluded);
+    return domain === normalized || domain.endsWith(`.${normalized}`);
+  });
 }
 
 function formatDateCL(value) {
@@ -294,6 +327,8 @@ export async function getEmailDigest(options = {}) {
         account: result.account,
         total: result.total,
         unread: result.unread,
+        excluded: result.excluded,
+        excludedDomains: result.excludedDomains,
         limit,
         since: result.since
       }
