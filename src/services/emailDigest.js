@@ -265,7 +265,7 @@ async function summarizeWithOpenAI({ hours, account, emails, total, unread }) {
     "3) Alertas / plataformas / sistemas",
     "4) Pendientes sugeridos",
     "",
-    "SÃ© concreto. No inventes datos. Si no hay correos suficientes, dilo."
+    "Sé concreto. No inventes datos. Si no hay correos suficientes, dilo. No cierres con preguntas ni ofrecimientos adicionales."
   ].join("\n");
 
   const response = await fetch("https://api.openai.com/v1/responses", {
