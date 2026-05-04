@@ -11,6 +11,7 @@
   "dependencies": {
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
+    "imapflow": "^1.0.194",
     "mysql2": "^3.15.2"
   }
 }

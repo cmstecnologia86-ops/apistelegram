@@ -12,6 +12,7 @@ import { getProjectStageDates } from "../services/gestorProjectStageDates.js";
 import { getProjectNewDraft, getProjectNewCreate } from "../services/gestorProjectNew.js";
 import { getActivityNewDraft, getActivityNewCreate } from "../services/gestorActivityNew.js";
 import { getMeetingNewDraft, getMeetingNewCreate } from "../services/gestorMeetingNew.js";
+import { getEmailDigest } from "../services/emailDigest.js";
 
 const router = express.Router();
 
@@ -312,7 +313,27 @@ router.post("/meeting-new-create", async (req, res) => {
     });
   }
 });
+router.post("/email-digest", async (req, res) => {
+  try {
+    const result = await getEmailDigest({
+      hours: req.body?.hours || req.body?.horas || 48,
+      limit: req.body?.limit || 40
+    });
+
+    return res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      intent: "email_digest",
+      source: "imap_openai",
+      text: `Error al generar resumen de correos: ${error.message}`,
+      error: error.message
+    });
+  }
+});
+
 export default router;
+
 
 
 
