@@ -228,12 +228,16 @@ function buildFallbackText({ hours, account, emails, total, unread }) {
 
 async function summarizeWithOpenAI({ hours, account, emails, total, unread }) {
   const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_EMAIL_DIGEST_MODEL || process.env.OPENAI_MODEL || DEFAULT_MODEL;
 
   if (!apiKey) {
-    return buildFallbackText({ hours, account, emails, total, unread });
+    return {
+      text: buildFallbackText({ hours, account, emails, total, unread }),
+      model,
+      usedOpenAI: false,
+      fallbackReason: "OPENAI_API_KEY missing"
+    };
   }
-
-  const model = process.env.OPENAI_EMAIL_DIGEST_MODEL || process.env.OPENAI_MODEL || DEFAULT_MODEL;
 
   const compactEmails = emails.slice(0, 40).map((mail, index) => ({
     n: index + 1,
@@ -278,12 +282,17 @@ async function summarizeWithOpenAI({ hours, account, emails, total, unread }) {
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");
-    return [
-      buildFallbackText({ hours, account, emails, total, unread }),
-      "",
-      `Nota: no se pudo resumir con OpenAI (${response.status}).`,
-      errorText ? errorText.slice(0, 300) : ""
-    ].filter(Boolean).join("\n");
+    return {
+      text: [
+        buildFallbackText({ hours, account, emails, total, unread }),
+        "",
+        `Nota: no se pudo resumir con OpenAI (${response.status}).`,
+        errorText ? errorText.slice(0, 300) : ""
+      ].filter(Boolean).join("\n"),
+      model,
+      usedOpenAI: false,
+      fallbackReason: `OpenAI HTTP ${response.status}`
+    };
   }
 
   const data = await response.json();
@@ -294,7 +303,12 @@ async function summarizeWithOpenAI({ hours, account, emails, total, unread }) {
       ?.join("")
       ?.trim();
 
-  return text || buildFallbackText({ hours, account, emails, total, unread });
+  return {
+    text: text || buildFallbackText({ hours, account, emails, total, unread }),
+    model,
+    usedOpenAI: Boolean(text),
+    fallbackReason: text ? null : "OpenAI response without text"
+  };
 }
 
 export async function getEmailDigest(options = {}) {
@@ -315,7 +329,7 @@ export async function getEmailDigest(options = {}) {
       };
     }
 
-    const text = await summarizeWithOpenAI({
+    const summary = await summarizeWithOpenAI({
       hours,
       account: result.account,
       emails: result.emails,
@@ -327,7 +341,7 @@ export async function getEmailDigest(options = {}) {
       ok: true,
       intent: "email_digest",
       source: "imap_openai",
-      text,
+      text: summary.text,
       meta: {
         hours,
         account: result.account,
@@ -335,6 +349,9 @@ export async function getEmailDigest(options = {}) {
         unread: result.unread,
         excluded: result.excluded,
         excludedDomains: result.excludedDomains,
+        model: summary.model,
+        usedOpenAI: summary.usedOpenAI,
+        fallbackReason: summary.fallbackReason,
         limit,
         since: result.since
       }
