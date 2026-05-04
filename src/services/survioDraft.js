@@ -18,7 +18,10 @@ function compactText(value = "") {
 }
 
 function looseText(value = "") {
-  return compactText(value).replace(/v/g, "b");
+  return compactText(value)
+    .replace(/v/g, "b")
+    .replace(/tech/g, "tec")
+    .replace(/h/g, "");
 }
 
 function boolEnv(value, fallback = false) {
@@ -156,21 +159,23 @@ async function getClientCatalog(query = "") {
   }
 
   const response = await gestorIsoRequest(`/api/clients?${searchParams.toString()}`);
-  const clients = response?.data?.clients || response?.clients || [];
+  const clients = uniqueClients(response?.data?.clients || response?.clients || []);
 
-  if (Array.isArray(clients) && clients.length) {
-    return uniqueClients(clients);
+  if (!query) return clients;
+
+  const bestSearchScore = clients.length
+    ? Math.max(...clients.map((client) => clientScore(client, query)))
+    : 0;
+
+  if (clients.length && bestSearchScore >= 0.45) {
+    return clients;
   }
 
-  if (query) {
-    const fallbackParams = new URLSearchParams();
-    fallbackParams.set("limit", "500");
+  const fallbackParams = new URLSearchParams();
+  fallbackParams.set("limit", "500");
 
-    const fallbackResponse = await gestorIsoRequest(`/api/clients?${fallbackParams.toString()}`);
-    return uniqueClients(fallbackResponse?.data?.clients || fallbackResponse?.clients || []);
-  }
-
-  return [];
+  const fallbackResponse = await gestorIsoRequest(`/api/clients?${fallbackParams.toString()}`);
+  return uniqueClients(fallbackResponse?.data?.clients || fallbackResponse?.clients || []);
 }
 
 function getYearFromClient(client) {
