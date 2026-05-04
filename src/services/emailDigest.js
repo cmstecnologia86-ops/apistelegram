@@ -185,11 +185,17 @@ async function fetchRecentEmails({ hours = 48, limit = 40 } = {}) {
 
   emails.sort((a, b) => new Date(b.receivedAt || 0) - new Date(a.receivedAt || 0));
 
+  const excludedDomains = getExcludedDomains();
+  const filteredEmails = emails.filter((mail) => !isExcludedSender(mail.from, excludedDomains));
+  const excludedCount = emails.length - filteredEmails.length;
+
   return {
     ok: true,
-    emails,
-    total: emails.length,
-    unread: emails.filter((mail) => mail.unread).length,
+    emails: filteredEmails,
+    total: filteredEmails.length,
+    unread: filteredEmails.filter((mail) => mail.unread).length,
+    excluded: excludedCount,
+    excludedDomains,
     since,
     account: cfg.user
   };
